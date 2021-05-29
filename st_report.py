@@ -34,7 +34,7 @@ def preprocess():
 	annees = np.arange(2005,2018,1)
 	
 	for annee in annees:
-		df[annee] = pd.read_csv('https://christophe-wardius.fr/projets/pysecuroute/dataset_v3/df_'+str(annee)+'_v3.csv')
+		df[annee] = pd.read_csv('https://www.jazzreal.org/static/df_'+str(annee)+'_v3.csv')
 		df[annee].an=df[annee].an+2000
 		df[annee]['date']=pd.to_datetime((df[annee].an*10000+df[annee].mois*100+df[annee].jour).apply(str),format='%Y%m%d', exact=False, errors='coerce')
 		df[annee]['day']= df[annee].date.dt.weekday
