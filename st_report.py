@@ -73,8 +73,10 @@ nav = st.sidebar.radio('',['1. Présentation','2. Exploration','3. Visualisation
 if nav == '1. Présentation':
 	"""
 	## 1. Présentation du projet
-
-
+	---
+	
+	### Introduction
+	
 	Les accidents corporels sont courants et les répertorier permet de les étudier afin d’identifier
 	les différents cas qui ont impliqué des blessures plus ou moins graves. Prédire la gravité
 	d’un accident en fonction de ses différentes caractéristiques peut être utile pour proposer
@@ -90,36 +92,166 @@ if nav == '1. Présentation':
 
 	[source](https://www.data.gouv.fr/fr/datasets/bases-de-donnees-annuelles-des-accidents-corporels-de-la-circulation-routiere-annees-de-2005-a-2019/#_)
 
-	## Description des données
+	### Objectif du projet
+	
+	Avec les nombreuses données mises à notre disposition, notre objectif est de Prédire la gravité d’un accident en fonction de ses différentes caractéristiques.
 
-	Pour chaque accident corporel (soit un accident survenu sur une voie ouverte à la circulation publique,
-	impliquant au moins un véhicule et ayant fait au moins une victime ayant nécessité des soins), des
-	saisies d’information décrivant l’accident sont effectuées par l’unité des forces de l’ordre (police,
-	gendarmerie, etc.) qui est intervenue sur le lieu de l’accident. Ces saisies sont rassemblées dans
-	une fiche intitulée bulletin d’analyse des accidents corporels. L’ensemble de ces fiches constitue le
-	fichier national des accidents corporels de la circulation dit « Fichier BAAC » administré par
-	l’Observatoire national interministériel de la sécurité routière "ONISR".
+	Nous allons essayer de faire ressortir les éléments majeurs qui nous permettront de proposer des axes d'améliorations en terme de Sécurité Routière.
 
-	Les bases de données, extraites du fichier BAAC, répertorient l'intégralité des accidents corporels de
-	la circulation, intervenus durant une année précise en France métropolitaine, dans les départements
-	d’Outre-mer (Guadeloupe, Guyane, Martinique, La Réunion et Mayotte depuis 2012) et dans les autres
-	territoires d’outre-mer (Saint-Pierre-et-Miquelon, Saint-Barthélemy, Saint-Martin, Wallis-et-Futuna,
-	Polynésie française et Nouvelle-Calédonie ; disponible qu’à partir de 2019 dans l’open data) avec une
-	description simplifiée. Cela comprend des informations de localisation de l’accident, telles que
-	renseignées ainsi que des informations concernant les caractéristiques de l’accident et son lieu, les
-	véhicules impliqués et leurs victimes.
+	Le but de cette étude est de trouver des pistes pour réduire la fréquence et la gravité des accidents corporels.
 
-	Par rapport aux bases de données agrégées 2005-2010 et 2006-2011 actuellement disponibles sur le
-	site www.data.gouv.fr, les bases de données de 2005 à 2019 sont désormais annuelles et composées
-	de 4 fichiers (Caractéristiques – Lieux – Véhicules – Usagers) au format csv. 
+	#### Pourquoi __PySécuRoute__ ?
+
+	Pour "__Py__thon", notre nouveau langage commun de `Data Analyst` avec ses nombreux et puissants outils
+	Pour Notre sensibilité commune sur la __Sécu__rité __Rout__ière
+	
 	"""
 
 elif nav == '2. Exploration':
 	"""
 		## 2. Exploration des données
-		
-		TODO...
+		---
 	"""
+		
+	if st.checkbox("Description des données"):
+		"""
+		### Description des données
+		---
+
+		Pour chaque accident corporel (soit un accident survenu sur une voie ouverte à la circulation publique,
+		impliquant au moins un véhicule et ayant fait au moins une victime ayant nécessité des soins), des
+		saisies d’information décrivant l’accident sont effectuées par l’unité des forces de l’ordre (police,
+		gendarmerie, etc.) qui est intervenue sur le lieu de l’accident. Ces saisies sont rassemblées dans
+		une fiche intitulée bulletin d’analyse des accidents corporels. L’ensemble de ces fiches constitue le
+		fichier national des accidents corporels de la circulation dit « Fichier BAAC » administré par
+		l’Observatoire national interministériel de la sécurité routière "ONISR".
+
+		Les bases de données, extraites du fichier BAAC, répertorient l'intégralité des accidents corporels de
+		la circulation, intervenus durant une année précise en France métropolitaine, dans les départements
+		d’Outre-mer (Guadeloupe, Guyane, Martinique, La Réunion et Mayotte depuis 2012) et dans les autres
+		territoires d’outre-mer (Saint-Pierre-et-Miquelon, Saint-Barthélemy, Saint-Martin, Wallis-et-Futuna,
+		Polynésie française et Nouvelle-Calédonie ; disponible qu’à partir de 2019 dans l’open data) avec une
+		description simplifiée. Cela comprend des informations de localisation de l’accident, telles que
+		renseignées ainsi que des informations concernant les caractéristiques de l’accident et son lieu, les
+		véhicules impliqués et leurs victimes.
+
+		Par rapport aux bases de données agrégées 2005-2010 et 2006-2011 actuellement disponibles sur le
+		site [www.data.gouv.fr](https://www.data.gouv.fr), les bases de données de 2005 à 2019 sont désormais annuelles et composées
+		de 4 fichiers (Caractéristiques – Lieux – Véhicules – Usagers) au format csv. 
+		
+		"""
+		
+	if st.checkbox("Exploitation des données"):
+		"""
+		### Exploitation des données
+		---
+	
+		Ayant relevé une incomptaibilité entre les datasets antérieurs et postérieurs à 2018, nous avons choisi de fusionner dans un DataFrame l'ensemble des bases de données de 2005 à 2017
+
+		"""
+		
+	if st.checkbox("Identification des données"):
+		"""
+		### Identification des données
+		---
+		
+		Afin de faciliter le téléchargement des données, l'ensemble des informations sur les jeux de données est agrégé dans un fichier master JSON :
+
+		* data.json
+		"""
+		# chargement du 'df_master' des jeu de données
+		data = json.load(open('data.json','r'))
+		df_master = pd.json_normalize(data['distribution'])
+		st.write(df_master.head())
+		
+	if st.checkbox("Restriction de l'exploration sur les des données sur la période 2005-2017"):
+		"""
+		### Restriction de l'exploration sur les des données sur la période 2005-2017
+		
+		
+		
+		La note de Description des bases de données annuelles des accidents corporels de la circulation routière
+		Années de 2005 à 2019 (téléchargeable ici) émet un avertissement :
+
+		Les données sur la qualification de blessé hospitalisé depuis l’année 2018 ne peuvent être comparées aux années précédentes suite à des modifications de process de saisie des forces de l’ordre. L’indicateur « blessé hospitalisé » n’est plus labellisé par l’autorité de la statistique publique depuis 2019.
+
+		Nous avons donc choisi de restreindre une partie de l'exploration des données sur la période 2005-2017, ce qui consitue :
+
+		* 13` années
+			
+		`4` datasets au format CSV par année :
+		* Caractéristiques,
+		* Lieux,
+		* Véhicules,
+		* Usagers.
+			
+		Soit `52` fichiers CSV à consolider dans un `DataFrame`.
+
+		On remarque qu'une erreur s'est produite avec le fichier `caracteristiques_2009.csv` que l'on traitera donc séparément.
+		(Il s'agit en fait d'un fichier _TSV_)
+		
+		"""
+		
+	if st.checkbox("Modèle de données"):
+		"""
+		### Modèle de données
+		---
+		
+		### Descriptifs des fichiers à disposition:
+		
+		#### Caractéristiques :
+
+		Circonstances générales de l’accident notamment la __date__, les __conditions atmostphériques__ et la __situation géographique__.
+
+		Identifiant(s) du fichier :
+
+		`Num_Acc`: Numéro d'identifiant de l’accident
+		
+		* LIEUX
+
+		Description du lieu principal de l’accident même si celui-ci s’est déroulé à une intersection
+
+		Identifiant(s) du fichier :
+
+		`Num_Acc`: Numéro d'identifiant de l’accident
+		
+		* VEHICULES
+
+		Véhicules impliqués dans l'accident avec les caractériques du véhicules
+
+		Identifiant(s) du fichier :
+
+		`Num_Acc` : Numéro d'identifiant de l’accident
+		`Num_Veh` : Identifiant du véhicule repris pour chacun des usagers occupant ce véhicule (y compris les piétons qui sont rattachés aux véhicules qui les ont heurtés)
+		
+		* USAGERS
+
+		Usagers impliqués dans l'accident avec caractéristiques propres à l'usager et les conséquences de l'accident (gravité)
+
+		Identifiant(s) du fichier :
+
+		`Num_Acc` : Numéro de l’accident
+		`Num_Veh` : Identifiant du véhicule repris pour chacun des usagers occupant ce véhicule (y compris les piétons qui sont rattachés aux véhicules qui les ont heurtés)
+		`place` : Permet de situer la place occupée dans le véhicule par l'usager au moment de l'accident
+
+		Chaque ligne correspond à un usager, en terme de données il peut y avoir des "faux" doublons notamment pour les usagers de transport en commun.
+		"""
+		
+	if st.checkbox("Constitution du jeu de données à explorer"):
+		
+		"""
+		### Constitution du jeu de données à explorer
+		
+		_Principe_:
+		Notre étude portant sur la gravité des blessures corporels des usagers, nous devons avoir l'ensembles des données concernant les usagers des accidents sur notre période de 2005 à 2017.
+
+		Pour constituer le jeu de données à explorer, nous prendrons donc le fichier `Usagers` comme fichier "Maitre" et nous ferons toutes les jointures nécessaires avec ce fichier.
+
+		_Pour chaque année de données récupérées_:
+		* Création de _4 dataframes_ correspondants aux chargements des _4 fichiers csv_ de l'année.
+		* Création d'un _dataframe global_ de l'année résultat des jointures des 4 dataframes de l'année
+		* _Concaténation_ de l'ensemble des dataframes globaux pour créer un dataframe final de notre période 2005 à 2017
+		"""
 	
 elif nav == '3. Visualisation':
 	"""
