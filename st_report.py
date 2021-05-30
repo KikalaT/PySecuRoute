@@ -6,11 +6,11 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import seaborn as sns
 
-# ~ from bokeh.plotting import figure
-# ~ from bokeh.tile_providers import get_provider, OSM
-# ~ from bokeh.transform import factor_cmap
-# ~ from bokeh.models.tools import WheelZoomTool
-# ~ from bokeh.models import ColumnDataSource
+from bokeh.plotting import figure
+from bokeh.tile_providers import get_provider, OSM
+from bokeh.transform import factor_cmap
+from bokeh.models.tools import WheelZoomTool
+from bokeh.models import ColumnDataSource
 
 import streamlit as st
 
@@ -35,24 +35,28 @@ def preprocess():
 	
 	for annee in annees:
 		df[annee] = pd.read_csv('https://christophe-wardius.fr/projets/pysecuroute/dataset_v3/df_'+str(annee)+'_v3.csv')
+		
 		df[annee].an=df[annee].an+2000
 		df[annee]['date']=pd.to_datetime((df[annee].an*10000+df[annee].mois*100+df[annee].jour).apply(str),format='%Y%m%d', exact=False, errors='coerce')
 		df[annee]['day']= df[annee].date.dt.weekday
 		
-		# ~ # conversion en 'float64'
-		# ~ df['long'] = pd.to_numeric(df['long'], errors='coerce')
+		# conversion en 'float64'
+		df[annee]['long'] = pd.to_numeric(df[annee]['long'], errors='coerce')
 		
-		# ~ # conversion du CRS en mercator
-		# ~ k = 6378137
-		# ~ df["x"] = (df['long'] / 100000)* (k * np.pi / 180.0)
-		# ~ df["y"] = np.log(np.tan((90 + df['lat']/100000) * np.pi / 360.0)) * k
+		# conversion du CRS en mercator
+		k = 6378137
+		df[annee]["x"] = (df[annee]['long'] / 100000)* (k * np.pi / 180.0)
+		df[annee]["y"] = np.log(np.tan((90 + df[annee]['lat']/100000) * np.pi / 360.0)) * k
 		
 		# data cleaning
 		df[annee].dropna()
-	
+		
+		print('(done) loading csv file for '+str(annee))
+
 	return df
 	
 df_ = preprocess()
+print('(done) : preprocessing completed.')
 
 # sidebar navigator
 st.sidebar.header('PySecuRoute v1.0')
@@ -129,54 +133,54 @@ elif nav == '3. Visualisation':
 	## GRAPHIQUES
 	###############
 	
-	# ~ # carte intéractive BOKEH
+	# carte intéractive BOKEH
 
-	# ~ # chargement du fond de carte
-	# ~ tile_provider = get_provider(OSM)
+	# chargement du fond de carte
+	tile_provider = get_provider(OSM)
 
-	# ~ # boîte à outils
-	# ~ tools = "pan,wheel_zoom,box_zoom,reset"
+	# boîte à outils
+	tools = "pan,wheel_zoom,box_zoom,reset"
 
-	# ~ # Création de la figure
+	# Création de la figure
 
-	# ~ p = figure(x_range=(-1000000, 2000000), y_range=(5000000, 7000000),
-			   # ~ x_axis_type="mercator", y_axis_type="mercator",
-			   # ~ tools=tools,
-			   # ~ plot_width=800,
-			   # ~ plot_height=600,
-			   # ~ title='(France) Accidents de la route par gravité ('+str(annee)+')'
-			   # ~ )
+	p = figure(x_range=(-1000000, 2000000), y_range=(5000000, 7000000),
+			   x_axis_type="mercator", y_axis_type="mercator",
+			   tools=tools,
+			   plot_width=800,
+			   plot_height=600,
+			   title='(France) Accidents de la route par gravité ('+str(annee)+')'
+			   )
 
-	# ~ p.add_tile(tile_provider)
+	p.add_tile(tile_provider)
 
-	# ~ # source
-	# ~ geo_source_1 = ColumnDataSource(data=df_[annee][df_[annee]['grav'] == 1])
-	# ~ geo_source_2 = ColumnDataSource(data=df_[annee][df_[annee]['grav'] == 2])
-	# ~ geo_source_3 = ColumnDataSource(data=df_[annee][df_[annee]['grav'] == 3])
-	# ~ geo_source_4 = ColumnDataSource(data=df_[annee][df_[annee]['grav'] == 4])
+	# source
+	geo_source_1 = ColumnDataSource(data=df_[annee][df_[annee]['grav'] == 1])
+	geo_source_2 = ColumnDataSource(data=df_[annee][df_[annee]['grav'] == 2])
+	geo_source_3 = ColumnDataSource(data=df_[annee][df_[annee]['grav'] == 3])
+	geo_source_4 = ColumnDataSource(data=df_[annee][df_[annee]['grav'] == 4])
 
-	# ~ # points
-	# ~ p1 = p.circle(x='x', y='y', size=5, alpha=0.3, source=geo_source_1, color='green', legend_label='Indemne')
-	# ~ p2 = p.circle(x='x', y='y', size=5, alpha=0.3, source=geo_source_2, color='red', legend_label='Tué')
-	# ~ p3 = p.circle(x='x', y='y', size=5, alpha=0.3, source=geo_source_3, color='orange', legend_label='Blessé hospitalisé')
-	# ~ p4 = p.circle(x='x', y='y', size=5, alpha=0.3, source=geo_source_4, color='yellow', legend_label='Blessé léger')
+	# points
+	p1 = p.circle(x='x', y='y', size=5, alpha=0.3, source=geo_source_1, color='green', legend_label='Indemne')
+	p2 = p.circle(x='x', y='y', size=5, alpha=0.3, source=geo_source_2, color='red', legend_label='Tué')
+	p3 = p.circle(x='x', y='y', size=5, alpha=0.3, source=geo_source_3, color='orange', legend_label='Blessé hospitalisé')
+	p4 = p.circle(x='x', y='y', size=5, alpha=0.3, source=geo_source_4, color='yellow', legend_label='Blessé léger')
 
 
-	# ~ # paramètres de la figure
-	# ~ p.xgrid.grid_line_color = None
-	# ~ p.ygrid.grid_line_color = None
-	# ~ p.xaxis.major_label_text_color = None
-	# ~ p.yaxis.major_label_text_color = None
-	# ~ p.xaxis.major_tick_line_color = None  
-	# ~ p.xaxis.minor_tick_line_color = None  
-	# ~ p.yaxis.major_tick_line_color = None  
-	# ~ p.yaxis.minor_tick_line_color = None  
-	# ~ p.yaxis.axis_line_color = None
-	# ~ p.xaxis.axis_line_color = None
-	# ~ p.legend.label_text_font_size = "9pt"
-	# ~ p.legend.click_policy = "hide" 
+	# paramètres de la figure
+	p.xgrid.grid_line_color = None
+	p.ygrid.grid_line_color = None
+	p.xaxis.major_label_text_color = None
+	p.yaxis.major_label_text_color = None
+	p.xaxis.major_tick_line_color = None  
+	p.xaxis.minor_tick_line_color = None  
+	p.yaxis.major_tick_line_color = None  
+	p.yaxis.minor_tick_line_color = None  
+	p.yaxis.axis_line_color = None
+	p.xaxis.axis_line_color = None
+	p.legend.label_text_font_size = "9pt"
+	p.legend.click_policy = "hide" 
 
-	# ~ st.bokeh_chart(p)
+	st.bokeh_chart(p)
 	
 	# Distribution des accidentés par mois
 	fig, ax = plt.subplots(figsize=(10,5))
