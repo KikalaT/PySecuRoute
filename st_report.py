@@ -1208,7 +1208,9 @@ elif nav == '4. Modélisation':
 		Les pistes d’améliorations avec ce modèle de Machine Learning serait :
 		* dans le jeu de données, de supprimer les modalités non prédites, soit la modalité la moins grave : '1',
 		* réaliser une stratification en fonction des modalités présentes au moment de créer les jeux de données d’entraînement et de test. 
+		* choisir un modèle de Machine Learning plus adapté au type qualitatif de notre jeu de données et à son nombre élevé d’observations (largement supérieur au seuil des 100k observations), comme [SGDClassifier](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.SGDClassifier.html) par exemple ou,
 		* tester un modèle de l'arbre de décision dans une bibliothèque plus adaptée au Big Data telle que [PySpark](https://spark.apache.org/docs/latest//api/python/reference/api/pyspark.mllib.tree.DecisionTree.html)  
+
 		"""
 	
 elif nav == '5. Conclusion':
