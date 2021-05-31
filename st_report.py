@@ -1124,7 +1124,7 @@ elif nav == '4. Modélisation':
 
 	### Données
 	
-	Les données utilisées sont celles fournies par le Ministère de l’Intérieur, moins `19 variables` que nous avons jugées inutiles ou redondantes. Nous avons enlevé toutes les variables de localisation géographiques, ainsi que les informations temporelles et les numéros d’accident et de véhicule. 
+	Les données utilisées sont celles fournies par le Ministère de l’Intérieur, moins `19 variables` que nous avons jugées inutiles ou redondantes. Nous avons enlevé toutes les variables de localisation géographiques (hormis  le code  INSEE de lacommune), ainsi que les informations temporelles et les numéros d’accident et de véhicule. 
 	
 	En voici la liste exhaustive : `dep`, `v2`, `v1`, `gps`, `pr1`, `pr`, `adr`, `voie`, `long`, `lat`, `Num_Acc`, `num_veh`, `an`, `mois`, `jour`, `hrmn`, `departement`, `region`, `an_nais`.
 	
@@ -1189,6 +1189,20 @@ elif nav == '4. Modélisation':
 		"""
 		st.image('PySecuRoute-DecisionTree-03-Matrice-confusion-tableau.png')
 		"""
+		##### Top 10 des variables explicatives
+		
+		Un autre résultat est le top 10 des variables explicatives déterminé par notre modèle de `DecisionTree`:
+		"""
+		st.image('PySecuRoute-DecisionTree-04-Top10-Importance-variables-explicatives-tableau.png')
+		"""
+		* Il se caractérise par la prévalence de la catégorie de la route (`catr`), 
+		* suivi de près par le code INSEE de la commune (`com`), 
+		* puis par l’usage ou non de certains équipements de sécurité (`secu`),
+		* puis le nombre total de voies de circulation (`nbv`),
+		* et enfin par le type de collision (`col`) pour le __top5__.
+		
+		A elles cinq, ces variables expliquent __55,5%__ de la prédiction de notre modèle.
+		
 		#### Conclusions et pistes d’améliorations avec `DecisionTree`
 		La modélisation avec DecisionTree se révèle acceptable, mais présente de nombreuses limites en termes de robustesse. La plus importante d’entre-elles est le biais de prédiction vers les accidents corporels les plus graves.
 		Les pistes d’améliorations avec ce modèle de Machine Learning serait :
