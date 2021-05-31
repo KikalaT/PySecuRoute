@@ -33,14 +33,22 @@ def preprocess():
 	df = {}
 	annees = np.arange(2005,2018,1)
 	
-	for annee in annees:
+	pbar = st.progress(0)
+	i = 0
+	for n,annee in enumerate(annees):
+		
+		#chargement des données depuis le cloud
 		df[annee] = pd.read_csv('https://christophe-wardius.fr/projets/pysecuroute/dataset_v3/df_'+str(annee)+'_v3.csv')
 		
+		# sampling du df à 33%
+		df[annee] = df[annee].sample(frac=0.33, replace=True, random_state=1)
+		
+		# gestion des dates
 		df[annee].an=df[annee].an+2000
 		df[annee]['date']=pd.to_datetime((df[annee].an*10000+df[annee].mois*100+df[annee].jour).apply(str),format='%Y%m%d', exact=False, errors='coerce')
 		df[annee]['day']= df[annee].date.dt.weekday
 		
-		# conversion en 'float64'
+		# conversion de la longitude en 'float64'
 		df[annee]['long'] = pd.to_numeric(df[annee]['long'], errors='coerce')
 		
 		# conversion du CRS en mercator
@@ -50,6 +58,9 @@ def preprocess():
 		
 		# data cleaning
 		df[annee].dropna()
+		
+		pbar.progress(i+1/13)
+		i += 1/13
 		
 		print('(done) loading csv file for '+str(annee))
 
@@ -293,9 +304,7 @@ elif nav == '3. Visualisation':
 		p.add_tile(tile_provider)
 
 		# source
-		
-		# sampling du df à 30%
-		df_bokeh = df_[annee].sample(frac=0.3, replace=True, random_state=1)
+		df_bokeh = df_[annee]
 		geo_source_1 = ColumnDataSource(data=df_bokeh[df_bokeh['grav'] == 1])
 		geo_source_2 = ColumnDataSource(data=df_bokeh[df_bokeh['grav'] == 2])
 		geo_source_3 = ColumnDataSource(data=df_bokeh[df_bokeh['grav'] == 3])
