@@ -258,6 +258,10 @@ elif nav == '3. Visualisation':
 		## 3. Visualisation des données
 	"""
 	
+	"""
+	(Nous avons fait le choix de __filtrer__ les données de visualisation __par année__ compte tenu des limitations de la plateform de partage __Streamlit Share__)
+	"""
+	 
 	annee = st.selectbox('Choisir une année (2005 à 2017)', np.arange(2005,2018,1))
 	
 	st.sidebar.markdown("### Analyses sur l'année : "+str(annee))
@@ -323,14 +327,14 @@ elif nav == '3. Visualisation':
 		France_Accidents_de_la_route_par_gravité()
 		
 	# Distribution des accidentés par mois
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidentés_par_mois():
 		fig, ax = plt.subplots(figsize=(10,5))
 		sns.countplot(x="mois", data=df_[annee], palette='hls')
 		plt.xlabel('Mois')
 		plt.ylabel('Nombre')
 		plt.title('Distribution des accidentés par mois ('+str(annee)+')')
-		plt.xticks(ticks=np.arange(1,13,1),
+		plt.xticks(ticks=np.arange(0,12,1),
 				   labels=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'],
 				   rotation=60
 				  );
@@ -339,7 +343,7 @@ elif nav == '3. Visualisation':
 		distribution_des_accidentés_par_mois()
 		
 	# Distribution des accidentés par jour de la semaine
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidentés_par_jour_de_la_semaine():
 		fig, ax = plt.subplots(figsize=(10,5))
 		sns.countplot(df_[annee].day);
@@ -355,7 +359,7 @@ elif nav == '3. Visualisation':
 		distribution_des_accidentés_par_jour_de_la_semaine()
 	
 	# Distribution des accidentés par heure de la journée
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidentés_par_heure_de_la_journée():
 		fig, ax = plt.subplots(figsize=(10,5))
 		sns.kdeplot(df_[annee].hrmn/100,ax=ax,shade=True,cut=0)
@@ -367,7 +371,7 @@ elif nav == '3. Visualisation':
 		distribution_des_accidentés_par_heure_de_la_journée()
 		
 	# ~ Distribution des accidentés par sexe
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidentés_par_sexe():
 		fig, ax = plt.subplots(figsize=(5,5))
 		sns.countplot(x="sexe",data=df_[annee])
@@ -379,7 +383,7 @@ elif nav == '3. Visualisation':
 		distribution_des_accidentés_par_sexe()
 	
 	# Distribution des accidenté(e)s par obstacles mobiles
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidenté_e_s_par_obstacles_mobiles():
 		fig, ax = plt.subplots(figsize=(10,5))
 		sns.countplot(x="obsm",data=df_[annee])
@@ -398,7 +402,7 @@ elif nav == '3. Visualisation':
 		distribution_des_accidenté_e_s_par_obstacles_mobiles()
 	
 	#### Distribution des accidenté(e)s par catégorie de `véhicule`
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidenté_e_s_par_catégorie_de_véhicule():
 		fig, ax = plt.subplots(figsize=(10,5))
 		sns.countplot(x="catv",data=df_[annee])
@@ -445,7 +449,7 @@ elif nav == '3. Visualisation':
 		distribution_des_accidenté_e_s_par_catégorie_de_véhicule()
 	
 # ~ Distribution des accidenté(e)s par catégorie de route
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidenté_e_s_par_catégorie_de_route():
 		fig, ax = plt.subplots(figsize=(10,5))
 		sns.countplot(x="catr",data=df_[annee])
@@ -465,7 +469,7 @@ elif nav == '3. Visualisation':
 		distribution_des_accidenté_e_s_par_catégorie_de_route()
 	
 	# Distribution des accidenté(e)s par types de choc
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidenté_e_s_par_types_de_choc():
 		fig, ax = plt.subplots(figsize=(10,5))
 		sns.countplot(x="choc",data=df_[annee])
@@ -487,19 +491,25 @@ elif nav == '3. Visualisation':
 		distribution_des_accidenté_e_s_par_types_de_choc()
 	
 	# Distribution des accidenté(e)s par types de collision
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidenté_e_s_par_types_de_collision():
 		fig, ax = plt.subplots(figsize=(10,5))
 		sns.countplot(x="col",data=df_[annee])
 		plt.xticks(rotation=40)
 		plt.xlabel("Type de collision")
+		plt.xticks([0,1,2,3,4,5,6],
+					['Deux véhicules - frontale','Deux véhicules – par l’arrière','Deux véhicules – par le coté',
+					'Trois véhicules et plus – en chaîne','Trois véhicules et plus - collisions multiples',
+					'Autre collision','Sans collision'],
+					rotation=75
+					)
 		plt.title('Distribution des accidenté(e)s par types de collisions ('+str(annee)+')');
 		st.pyplot(fig)
 	if st.checkbox("Distribution des accidenté(e)s par types de collision"):
 		distribution_des_accidenté_e_s_par_types_de_collision()
 
 	# Distribution des accidenté(e)s par motif de trajet
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidenté_e_s_par_motif_de_trajet():
 		fig, ax = plt.subplots(figsize=(10,5))
 		sns.countplot(x="trajet",data=df_[annee])
@@ -518,7 +528,7 @@ elif nav == '3. Visualisation':
 		distribution_des_accidenté_e_s_par_motif_de_trajet()
 	
 	# Distribution des accidenté(e)s par type d'accompagnement
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidenté_e_s_par_type_d_accompagnement():
 		fig, ax = plt.subplots()
 		sns.countplot(x="etatp",data=df_[annee])
@@ -530,7 +540,7 @@ elif nav == '3. Visualisation':
 		distribution_des_accidenté_e_s_par_type_d_accompagnement()
 	
 	# Distribution des accidenté(e)s par infrastructure
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidenté_e_s_par_infrastructure():
 		fig, ax = plt.subplots(figsize=(10,5))
 		sns.countplot(x="infra",data=df_[annee])
@@ -545,7 +555,7 @@ elif nav == '3. Visualisation':
 		distribution_des_accidenté_e_s_par_infrastructure()
 	
 	# ~ Distribution des accidenté(e)s par localisation
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidenté_e_s_par_localisation():
 		fig, ax = plt.subplots(figsize=(5,5))
 		sns.countplot(x="agg",data=df_[annee])
@@ -558,7 +568,7 @@ elif nav == '3. Visualisation':
 		distribution_des_accidenté_e_s_par_localisation()
 	
 	# ~ Distribution des accidenté(e)s par situation de l'accident
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidenté_e_s_par_situation_de_l_accident():
 		fig, ax = plt.subplots(figsize=(10,5))
 		sns.countplot(x="situ",data=df_[annee])
@@ -571,13 +581,14 @@ elif nav == '3. Visualisation':
 		plt.xticks(rotation=30)
 		plt.xlabel("Situation de l'accident")
 		plt.ylabel('Nombre')
+		plt.yscale('log')
 		plt.title("Distribution des accidenté(e)s par situation de l'accident");
 		st.pyplot(fig)
 	if st.checkbox("Distribution des accidenté(e)s par situation de l'accident"):
 		distribution_des_accidenté_e_s_par_situation_de_l_accident()
 	
 	# ~ Distribution des accidenté(e)s par gravité des blessures
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidenté_e_s_par_gravité_des_blessures():
 		fig, ax = plt.subplots(figsize=(10,5))
 		sns.countplot(x="grav",data=df_[annee])
@@ -593,7 +604,7 @@ elif nav == '3. Visualisation':
 		distribution_des_accidenté_e_s_par_gravité_des_blessures()
 	
 	#### Distribution des accidenté(e)s par gravité des blessures en fonction des `mois de l'année`
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_mois_de_l_année():
 		fig, ax = plt.subplots(figsize=(10,10))
 		sns.countplot(x="grav", hue="mois", data=df_[annee]);
@@ -619,8 +630,9 @@ elif nav == '3. Visualisation':
 		st.pyplot(fig)
 	if st.checkbox("Distribution des accidenté(e)s par gravité des blessures en fonction des `mois de l'année`"):
 		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_mois_de_l_année()
+		
 	# ~ Distribution des accidenté(e)s par gravité des blessures en fonction des jours de la semaine
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_jours_de_la_semaine():
 		fig, ax = plt.subplots(figsize=(10,5))
 		sns.countplot(x="grav", hue="day", data=df_[annee]);
@@ -631,13 +643,14 @@ elif nav == '3. Visualisation':
 						  'Blessé léger'])
 		plt.xlabel("Gravité du bléssé")
 		plt.ylabel('Nombre')
+		plt.yscale('log')
 		plt.title("Distribution des accidenté(e)s par gravité des blessures en fonction des jours de la semaine");
 		st.pyplot(fig)
 	if st.checkbox("Distribution des accidenté(e)s par gravité des blessures en fonction des jours de la semaine"):
 		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_mois_de_l_année()
 	# ~ Distribution des accidenté(e)s par gravité des blessures en fonction de l'heure
 	
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_de_l_heure():
 		fig, ax = plt.subplots(figsize=(11,5))
 		sns.kdeplot(x='hrmn',hue='grav',multiple="stack",data=df_[annee])
@@ -652,7 +665,7 @@ elif nav == '3. Visualisation':
 		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_de_l_heure()
 		
 	# ~ Distribution des accidenté(e)s par gravité des blessures en fonction du sexe
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_du_sexe():
 		fig, ax = plt.subplots(figsize=(10,5))
 		sns.countplot(x="grav", hue="sexe", data=df_[annee]);
@@ -669,7 +682,7 @@ elif nav == '3. Visualisation':
 		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_du_sexe()
 		
 	#### Distribution des accidenté(e)s par gravité des blessures en fonction des obstacles `fixes` & `mobiles`
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_obstacles_fixes_mobiles():
 		fig, ax = plt.subplots(figsize=(15,15))
 		sns.countplot(x="grav", hue="obs", data=df_[annee]);
@@ -702,7 +715,7 @@ elif nav == '3. Visualisation':
 		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_obstacles_fixes_mobiles()
 		
 	# ~ Distribution des accidenté(e)s par gravité des blessures en fonction des obstacles mobiles rencontrés
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_obstacles_mobiles_rencontrés():
 		
 		fig, ax = plt.subplots(figsize=(10,5))
@@ -726,7 +739,7 @@ elif nav == '3. Visualisation':
 		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_obstacles_mobiles_rencontrés()
 	
 	#### Distribution des accidenté(e)s par gravité des blessures en fonction des catégories de `véhicule`
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_catégories_de_véhicule():
 		fig, ax = plt.subplots(figsize=(20,20))
 		sns.countplot(x="grav", hue="catv", data=df_[annee]);
@@ -775,7 +788,7 @@ elif nav == '3. Visualisation':
 		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_catégories_de_véhicule()
 	
 	# ~ Distribution des accidenté(e)s par gravité des blessures en fonction des catégories de route
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_catégories_de_route():
 		fig, ax = plt.subplots(figsize=(10,5))
 		sns.countplot(x="grav", hue="catr", data=df_[annee]);
@@ -798,7 +811,7 @@ elif nav == '3. Visualisation':
 		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_catégories_de_route()
 	
 	# ~ Distribution des accidenté(e)s par gravité des blessures en fonction des catégories d'usagers
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_catégories_d_usagers():
 		fig, ax = plt.subplots(figsize=(10,5))
 		sns.countplot(x="grav", hue="catu", data=df_[annee]);
@@ -817,7 +830,7 @@ elif nav == '3. Visualisation':
 		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_catégories_d_usagers()
 	
 	#### Distribution des accidenté(e)s par gravité des blessures en fonction des types de `point de choc`
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_types_de_point_de_choc():
 		fig, ax = plt.subplots(figsize=(10,10))
 		sns.countplot(x="grav", hue="choc", data=df_[annee]);
@@ -843,7 +856,7 @@ elif nav == '3. Visualisation':
 		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_types_de_point_de_choc()
 	
 	# ~ Distribution des accidenté(e)s par gravité des blessures en fonction du type de collision
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_du_type_de_collision():
 		fig, ax = plt.subplots(figsize=(10,5))
 		sns.countplot(x="grav", hue="col", data=df_[annee]);
@@ -866,7 +879,7 @@ elif nav == '3. Visualisation':
 		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_du_type_de_collision()
 	
 	# ~ Distribution des accidenté(e)s par gravité des blessures en fonction du type de trajet
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_du_type_de_trajet():
 		fig, ax = plt.subplots(figsize=(10,5))
 		sns.countplot(x="grav", hue="trajet", data=df_[annee]);
@@ -889,7 +902,7 @@ elif nav == '3. Visualisation':
 		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_du_type_de_trajet()
 	
 	#### Distribution des accidenté(e)s par gravité des blessures en fonction de variables complémentaires
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_de_variables_complémentaires():
 		fig, ax = plt.subplots(figsize=(10,5))
 		sns.countplot(x="grav", hue="agg", data=df_[annee]);
@@ -906,7 +919,7 @@ elif nav == '3. Visualisation':
 		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_de_variables_complémentaires()
 	
 	# ~ Distribution des accidenté(e)s par gravité des blessures en fonction du type d'aménagement / d'infrastructure
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_du_type_d_aménagement_d_infrastructure():
 		fig, ax = plt.subplots(figsize=(10,10))
 		sns.countplot(x="grav", hue="infra", data=df_[annee]);
@@ -924,13 +937,14 @@ elif nav == '3. Visualisation':
 						  'Blessé léger'])
 		plt.xlabel("Gravité du bléssé")
 		plt.ylabel('Nombre')
+		plt.yscale('log')
 		plt.title("Distribution des accidenté(e)s par gravité des blessures en fonction du type d'aménagement / d'infrastructure");
 		st.pyplot(fig)
 	if st.checkbox("Distribution des accidenté(e)s par gravité des blessures en fonction du type d'aménagement / d'infrastructure"):
 		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_du_type_d_aménagement_d_infrastructure()
 		
 	# ~ Distribution des accidenté(e)s par gravité des blessures en fonction de la situation de l'accident
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_de_la_situation_de_l_accident():
 		fig, ax = plt.subplots(figsize=(10,5))
 		sns.countplot(x="grav", hue="situ", data=df_[annee]);
@@ -951,7 +965,7 @@ elif nav == '3. Visualisation':
 	if st.checkbox("Distribution des accidenté(e)s par gravité des blessures en fonction de la situation de l'accident"):
 		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_de_la_situation_de_l_accident()
 	# ~ Distribution des accidenté(e)s par gravité des blessures en fonction des conditions d'éclairage
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_conditions_d_éclairage():
 		fig, ax = plt.subplots(figsize=(10,5))
 		sns.countplot(x="grav", hue="lum", data=df_[annee]);
@@ -972,7 +986,7 @@ elif nav == '3. Visualisation':
 		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_conditions_d_éclairage()
 	
 	# ~ Distribution des accidenté(e)s par gravité des blessures en fonction des conditions atmosphériques
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_conditions_atmosphériques():
 		fig, ax = plt.subplots(figsize=(10,10))
 		sns.countplot(x="grav", hue="atm", data=df_[annee]);
@@ -997,7 +1011,7 @@ elif nav == '3. Visualisation':
 		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_conditions_atmosphériques()
 	
 	# ~ Distribution des accidenté(e)s par gravité des blessures en fonction de l'état de la surface
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_de_l_état_de_la_surface():
 		fig, ax = plt.subplots(figsize=(10,10))
 		sns.countplot(x="grav", hue="surf", data=df_[annee]);
@@ -1023,7 +1037,7 @@ elif nav == '3. Visualisation':
 		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_de_l_état_de_la_surface()
 		
 	# ~ Distribution des accidenté(e)s par conditions atmosphériques
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidenté_e_s_par_conditions_atmosphériques():
 		fig, ax = plt.subplots(figsize=(10,5))
 		sns.countplot(x="atm",data=df_[annee])
@@ -1045,7 +1059,7 @@ elif nav == '3. Visualisation':
 		distribution_des_accidenté_e_s_par_conditions_atmosphériques()
 		
 	# Distribution des accidentés en fonction des `conditions atmosphériques`
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidentés_en_fonction_des_conditions_atmosphériques():
 		labels_atm = ['Normale','Pluie légère','Pluie forte','Neige - grêle','Brouillard - fumée','Vent fort - tempête','Temps éblouissant','Temps couvert','Autre']
 
@@ -1058,12 +1072,13 @@ elif nav == '3. Visualisation':
 		plt.yscale('log')
 		plt.legend(loc='upper center');
 		st.pyplot(fig)
-	if st.checkbox("Distribution des accidentés en fonction des `conditions atmosphériques`"):
+	if st.checkbox("Distribution des accidentés en fonction des `conditions atmosphériques (par région)"):
 		distribution_des_accidentés_en_fonction_des_conditions_atmosphériques()
 	
 	# ~ Distribution des accidentés en région Île-de-France suivant la météo
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidentés_en_région_île_de_france_suivant_la_météo():
+		labels_atm = ['Normale','Pluie légère','Pluie forte','Neige - grêle','Brouillard - fumée','Vent fort - tempête','Temps éblouissant','Temps couvert','Autre']
 		fig, ax = plt.subplots(figsize=(15,15))
 		df_[annee].mois = df_[annee].mois.replace({1:'Janvier',2:'Février',3:'Mars',
 								   4:'Avril',5:'Mai',6:'Juin',7:'Juillet',
@@ -1082,8 +1097,9 @@ elif nav == '3. Visualisation':
 		distribution_des_accidentés_en_région_île_de_france_suivant_la_météo()
 	
 	# ~ Distribution des accidentés en région Auvergne-Rhône-Alpes suivant la météo
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	
 	def distribution_des_accidentés_en_région_auvergne_rhône_alpes_suivant_la_météo():
+		labels_atm = ['Normale','Pluie légère','Pluie forte','Neige - grêle','Brouillard - fumée','Vent fort - tempête','Temps éblouissant','Temps couvert','Autre']
 		fig, ax = plt.subplots(figsize=(15,15))
 		sns.countplot(x=df_[annee].atm, hue=df_[annee].mois,data=df_[annee][df_[annee].region=='Auvergne-Rhône-Alpes'], palette='hls')
 		ax.xaxis.set_ticklabels(labels_atm, rotation=60)
@@ -1099,10 +1115,87 @@ elif nav == '3. Visualisation':
 
 elif nav == '4. Modélisation':
 	"""
-		## 4. Modélisation
-		
-		TODO...
+	## 4. Modélisation
+	---
+	
+	
+	
+	En complément des analyses réalisées grâce aux _visualisations de données_, nous avons voulu réaliser du __Machine Learning__ afin de voir si on pouvait __prédire la gravité__ d’un _accident corporel_ en France.
+
+	### Données
+	
+	Les données utilisées sont celles fournies par le Ministère de l’Intérieur, moins `19 variables` que nous avons jugées inutiles ou redondantes. Nous avons enlevé toutes les variables de localisation géographiques, ainsi que les informations temporelles et les numéros d’accident et de véhicule. 
+	
+	En voici la liste exhaustive : `dep`, `v2`, `v1`, `gps`, `pr1`, `pr`, `adr`, `voie`, `long`, `lat`, `Num_Acc`, `num_veh`, `an`, `mois`, `jour`, `hrmn`, `departement`, `region`, `an_nais`.
+	
+	L’étendue des données porte toujours sur _les années 2005 à 2017 inclues_.
+	
+	La gestion des `NaN` pour les variables quantitatives, suit le choix de l’ensemble du projet, soit l’utilisation du `mode`.
+	
+	Concernant les variables quantitatives, les observations sont supprimées.
+
+	### Tests et améliorations du Modèle de Machine Learning
+	
+	Après plusieurs essais, le choix a été fait de ne pas réaliser les modélisations sur tout le dataset de ML, mais après une diminution du dataset par regroupement (`groupby`) sur le numéro d'accident (`Num_Acc`), en ne conservant que la gravité (`grav`) la plus élevée (`max()`) lors de chaque accident.
+	
+	Ce choix nous a semblé judicieux pour plusieurs raisons :
+	
+	* donner de meilleures prédictions,
+	* réduire le temps de calcul,
+	* correspondre le mieux à une logique fonctionnelle (par exemple d’assureur), qui pourrait être notre client sur ce projet.
+	
+	Par contre, il aura une conséquence : la gravité la moins élevée (modalité '1' = 'indemne') n’est que très peu observée. De fait, elle sera absente du jeu de test et donc des résultats.
+	On peut argumenter notre choix dans ce sens, car on s'intéresse généralement aux risques d'accidents corporels de la route (pas 'indemne')
+	
+	### Données utilisées
+	
+	Le jeu de données utilisé pour les prédictions de Machine Learning comprend donc `1 100 476 observations` et `33 variables explicatives` potentielles.
+
+	### Choix des modèles
+	
+	Dans un but d’interprétabilité des résultats et de test de robustesse, nous avons opté dans un premier temps pour l’arbre de décision [DecisionTree](https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html#sklearn.tree.DecisionTreeClassifier) de la bibliothèque `Sklearn`,
+	et dans un second temps, pour la forêt d’arbres aléatoires [RandomForest](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html), toujours dela bibliothèque `Sklearn`.
 	"""
+	if st.checkbox('DecisionTree'):
+		"""
+		#### Résultats avec `DecisionTree`
+
+
+		##### Hyperparamètres utilisés
+		
+		Après différents tests de recherche des meilleurs hyperparamètres via la fonction `GridSearchCV`, il s’est avéré que les meilleurs étaient : `{'criterion': 'gini', 'max_depth': 14}`.
+
+		##### Taux de prédiction
+		Le taux de réussite de prédiction du modèle sur le jeu d'entraînement s'élève à 73,03%.
+		Le taux de réussite de prédiction du modèle sur le jeu de test, c’est-à-dire en condition réelle d’utilisation, s'élève à 70,52%.
+
+		##### Rapport d’évaluation
+		
+		Le rapport d’évaluation du modèle sur l’échantillon de test est le suivant :
+		
+		"""
+		st.image('PySecuRoute-DecisionTree-01-Rapport-evaluation.png')
+		"""
+		
+		La moyenne montre des scores satisfaisants, avec un recall légèrement supérieur au f1.
+
+		##### Matrice de confusion (heatmap et tableau)
+		
+		Dans le détail, la matrice de confusion représentée visuellement ci-dessous par un heatmap montre son meilleur taux de prédiction des accidents corporels sur les cas les plus graves (modalité '4'), alors que les autres prédictions présentent un nombre élevé de faux-positifs, et encore plus de faux-négatifs, créés par le modèle.
+		"""
+		st.image('PySecuRoute-DecisionTree-02-Matrice-confusion-heatmap.png')
+		"""
+		En chiffres, cela donne le tableau ci-dessous. Les effectifs visualisés de cette façon sont plus parlants. En outre, il nous permet de calculer que pour la modalité '3' par exemple, le pourcentage de faux-positifs s’élève à 58,7%, le pourcentage de faux-négatifs est de 0,6%, soit un taux de correctement prédis de 40,7%. Des résultats qui étaient déjà présents dans le rapport d’évaluation, respectivement sous les dénominations 'pre' mis pour precision, 'geo' et 'rec' pour recall.
+		"""
+		st.image('PySecuRoute-DecisionTree-03-Matrice-confusion-tableau.png')
+		"""
+		#### Conclusions et pistes d’améliorations avec `DecisionTree`
+		La modélisation avec DecisionTree se révèle acceptable, mais présente de nombreuses limites en termes de robustesse. La plus importante d’entre-elles est le biais de prédiction vers les accidents corporels les plus graves.
+		Les pistes d’améliorations avec ce modèle de Machine Learning serait :
+		* dans le jeu de données, de supprimer les modalités non prédites, soit la modalité la moins grave : '1',
+		* réaliser une stratification en fonction des modalités présentes au moment de créer les jeux de données d’entraînement et de test. 
+		* tester un modèle de l'arbre de décision dans une bibliothèque plus adaptée au Big Data telle que [PySpark](https://spark.apache.org/docs/latest//api/python/reference/api/pyspark.mllib.tree.DecisionTree.html)  
+		"""
 	
 elif nav == '5. Conclusion':
 	"""
