@@ -21,7 +21,7 @@ layout="wide",
 )
 
 # pré-processing (mise en cache pour gain de performance)
-@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+@st.cache(suppress_st_warning=True, allow_output_mutation=True,max_entries=10, ttl=3600)
 def preprocess():
 	## chargement des données
 	
