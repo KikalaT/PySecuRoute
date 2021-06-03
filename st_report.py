@@ -20,55 +20,6 @@ page_title="PySecuRoute v1.0",
 layout="wide",
 )
 
-# pré-processing (mise en cache pour gain de performance)
-@st.cache(suppress_st_warning=True, allow_output_mutation=True,max_entries=10, ttl=3600)
-def preprocess():
-	## chargement des données
-	
-	# chargement du 'df_master' des jeu de données
-	data = json.load(open('data.json','r'))
-	df_master = pd.json_normalize(data['distribution'])
-	
-	# chargement des df par année
-	df = {}
-	annees = np.arange(2005,2018,1)
-	
-	pbar = st.progress(0)
-	i = 0
-	for n,annee in enumerate(annees):
-		
-		#chargement des données depuis le cloud
-		df[annee] = pd.read_csv('https://christophe-wardius.fr/projets/pysecuroute/dataset_v3/df_'+str(annee)+'_v3.csv')
-		
-		# sampling du df à 33%
-		df[annee] = df[annee].sample(frac=0.33, replace=True, random_state=1)
-		
-		# gestion des dates
-		df[annee].an=df[annee].an+2000
-		df[annee]['date']=pd.to_datetime((df[annee].an*10000+df[annee].mois*100+df[annee].jour).apply(str),format='%Y%m%d', exact=False, errors='coerce')
-		df[annee]['day']= df[annee].date.dt.weekday
-		
-		# conversion de la longitude en 'float64'
-		df[annee]['long'] = pd.to_numeric(df[annee]['long'], errors='coerce')
-		
-		# conversion du CRS en mercator
-		k = 6378137
-		df[annee]["x"] = (df[annee]['long'] / 100000)* (k * np.pi / 180.0)
-		df[annee]["y"] = np.log(np.tan((90 + df[annee]['lat']/100000) * np.pi / 360.0)) * k
-		
-		# data cleaning
-		df[annee].dropna()
-		
-		pbar.progress(i+1/13)
-		i += 1/13
-		
-		print('(done) loading csv file for '+str(annee))
-
-	return df
-	
-df_ = preprocess()
-print('(done) : preprocessing completed.')
-
 # sidebar navigator
 st.sidebar.header('PySecuRoute v1.0')
 st.sidebar.title('Sommaire')
@@ -80,6 +31,49 @@ nav = st.sidebar.radio('',['1. Présentation','2. Exploration','3. Visualisation
 #### `Pascal INDICE` | `Kikala TRAORÉ` | `Christophe WARDIUS` | `Hervé HOUY`
 ---
 """
+
+annee = st.selectbox("Sélectionnez une année d'étude (de 2005 à 2017)", np.arange(2005,2018,1))
+
+@st.cache(suppress_st_warning=True,allow_output_mutation=True)
+def preprocess():
+	## chargement des données
+	
+	# chargement du 'df_master' des jeu de données
+	data = json.load(open('data.json','r'))
+	df_master = pd.json_normalize(data['distribution'])
+	
+	# chargement des df par année
+	df = {}
+	
+	#chargement des données depuis le cloud
+	df[annee] = pd.read_csv('https://christophe-wardius.fr/projets/pysecuroute/dataset_v3/df_'+str(annee)+'_v3.csv')
+	
+	# sampling du df à 33%
+	df[annee] = df[annee].sample(frac=0.33, replace=True, random_state=1)
+	
+	# gestion des dates
+	df[annee].an=df[annee].an+2000
+	df[annee]['date']=pd.to_datetime((df[annee].an*10000+df[annee].mois*100+df[annee].jour).apply(str),format='%Y%m%d', exact=False, errors='coerce')
+	df[annee]['day']= df[annee].date.dt.weekday
+	
+	# conversion de la longitude en 'float64'
+	df[annee]['long'] = pd.to_numeric(df[annee]['long'], errors='coerce')
+	
+	# conversion du CRS en mercator
+	k = 6378137
+	df[annee]["x"] = (df[annee]['long'] / 100000)* (k * np.pi / 180.0)
+	df[annee]["y"] = np.log(np.tan((90 + df[annee]['lat']/100000) * np.pi / 360.0)) * k
+	
+	# data cleaning
+	df[annee].dropna()
+	
+	print('(done) loading csv file for '+str(annee))
+
+	return df
+	
+df_ = preprocess()
+print('(done) : preprocessing completed.')
+
 
 if nav == '1. Présentation':
 	"""
@@ -273,8 +267,6 @@ elif nav == '3. Visualisation':
 	(Nous avons fait le choix de __filtrer__ les données de visualisation __par année__ compte tenu des limitations de la plateform de partage __Streamlit Share__)
 	"""
 	 
-	annee = st.selectbox('Choisir une année (2005 à 2017)', np.arange(2005,2018,1))
-	
 	st.sidebar.markdown("### Analyses sur l'année : "+str(annee))
 	
 	## GRAPHIQUES
