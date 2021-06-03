@@ -46,7 +46,7 @@ def preprocess():
 	df = {}
 	
 	#chargement des données depuis le cloud
-	df[annee] = pd.read_csv('https://christophe-wardius.fr/projets/pysecuroute/dataset_v3/df_'+str(annee)+'_v3.csv')
+	df[annee] = pd.read_csv('https://www.jazzreal.org/static/df_'+str(annee)+'_v3.csv')
 	
 	# sampling du df à 33%
 	df[annee] = df[annee].sample(frac=0.33, replace=True, random_state=1)
