@@ -34,7 +34,7 @@ nav = st.sidebar.radio('',['1. Présentation','2. Exploration','3. Visualisation
 
 annee = st.selectbox("Sélectionnez une année d'étude (de 2005 à 2017)", np.arange(2005,2018,1))
 
-@st.cache(suppress_st_warning=True,allow_output_mutation=True,max_entries=None,ttl=60*7)
+@st.cache(suppress_st_warning=True,allow_output_mutation=True,max_entries=None,ttl=60*2)
 def preprocess():
 	## chargement des données
 	
@@ -48,8 +48,8 @@ def preprocess():
 	#chargement des données depuis le cloud
 	df[annee] = pd.read_csv('https://www.jazzreal.org/static/df_'+str(annee)+'_v3.csv')
 	
-	# sampling du df à 33%
-	df[annee] = df[annee].sample(frac=0.33, replace=True, random_state=1)
+	# sampling du df à 10%
+	df[annee] = df[annee].sample(frac=0.10, replace=False, random_state=1234)
 	
 	# gestion des dates
 	df[annee].an=df[annee].an+2000
@@ -275,7 +275,7 @@ elif nav == '3. Visualisation':
 	
 	# carte intéractive BOKEH
 	
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True)
+	@st.cache(suppress_st_warning=True, allow_output_mutation=True,max_entries=None,ttl=60*2)
 	def France_Accidents_de_la_route_par_gravité():
 		# chargement du fond de carte
 		tile_provider = get_provider(OSM)
