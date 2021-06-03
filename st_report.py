@@ -34,7 +34,7 @@ nav = st.sidebar.radio('',['1. Présentation','2. Exploration','3. Visualisation
 
 annee = st.selectbox("Sélectionnez une année d'étude (de 2005 à 2017)", np.arange(2005,2018,1))
 
-@st.cache(suppress_st_warning=True,allow_output_mutation=True)
+@st.cache(suppress_st_warning=True,allow_output_mutation=True,max_entries=None,ttl=60*7)
 def preprocess():
 	## chargement des données
 	
