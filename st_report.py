@@ -23,7 +23,7 @@ layout="wide",
 # sidebar navigator
 st.sidebar.header('PySecuRoute v1.0')
 st.sidebar.title('Sommaire')
-nav = st.sidebar.radio('',['1. Présentation','2. Exploration','3. Visualisation','4. Modélisation','5. Conclusion'])
+nav = st.sidebar.radio('',['1. Présentation','2. Exploration','3. Analyse et Visualisation'])
 
 """
 # PySecuRoute v1.0
@@ -31,49 +31,6 @@ nav = st.sidebar.radio('',['1. Présentation','2. Exploration','3. Visualisation
 #### `Pascal INDICE` | `Kikala TRAORÉ` | `Christophe WARDIUS` | `Hervé HOUY`
 ---
 """
-
-annee = st.selectbox("Sélectionnez une année d'étude (de 2005 à 2017)", np.arange(2005,2018,1))
-
-@st.cache(suppress_st_warning=True,allow_output_mutation=True,max_entries=None,ttl=60*2)
-def preprocess():
-	## chargement des données
-	
-	# chargement du 'df_master' des jeu de données
-	data = json.load(open('data.json','r'))
-	df_master = pd.json_normalize(data['distribution'])
-	
-	# chargement des df par année
-	df = {}
-	
-	#chargement des données depuis le cloud
-	df[annee] = pd.read_csv('https://www.jazzreal.org/static/df_'+str(annee)+'_v3.csv')
-	
-	# sampling du df à 10%
-	df[annee] = df[annee].sample(frac=0.10, replace=False, random_state=1234)
-	
-	# gestion des dates
-	df[annee].an=df[annee].an+2000
-	df[annee]['date']=pd.to_datetime((df[annee].an*10000+df[annee].mois*100+df[annee].jour).apply(str),format='%Y%m%d', exact=False, errors='coerce')
-	df[annee]['day']= df[annee].date.dt.weekday
-	
-	# conversion de la longitude en 'float64'
-	df[annee]['long'] = pd.to_numeric(df[annee]['long'], errors='coerce')
-	
-	# conversion du CRS en mercator
-	k = 6378137
-	df[annee]["x"] = (df[annee]['long'] / 100000)* (k * np.pi / 180.0)
-	df[annee]["y"] = np.log(np.tan((90 + df[annee]['lat']/100000) * np.pi / 360.0)) * k
-	
-	# data cleaning
-	df[annee].dropna()
-	
-	print('(done) loading csv file for '+str(annee))
-
-	return df
-	
-df_ = preprocess()
-print('(done) : preprocessing completed.')
-
 
 if nav == '1. Présentation':
 	"""
@@ -258,58 +215,208 @@ elif nav == '2. Exploration':
 		* _Concaténation_ de l'ensemble des dataframes globaux pour créer un dataframe final de notre période 2005 à 2017
 		"""
 	
-elif nav == '3. Visualisation':
+elif nav == '3. Analyse et Visualisation':
 	"""
-		## 3. Visualisation des données
+		## 3. Analyse et Visualisation des données
 	"""
 	
 	"""
-	(Nous avons fait le choix de __filtrer__ les données de visualisation __par année__ compte tenu des limitations de la plateform de partage __Streamlit Share__)
+	(Nous avons fait le choix de __filtrer__ les données de visualisation __par année__ compte tenu des limitations de la plateforme de partage __Streamlit Share__)
 	"""
-	 
+	
+	annee = st.selectbox("Sélectionnez une année d'étude (de 2005 à 2017)", np.arange(2005,2018,1))
+
+	@st.cache(suppress_st_warning=True,allow_output_mutation=True,max_entries=None,ttl=60*3)
+	def preprocess():
+		
+		# chargement des df par année
+		df = {}
+		
+		#chargement des données depuis le cloud
+		df[annee] = pd.read_csv('https://www.jazzreal.org/static/df_'+str(annee)+'_v3.csv')
+		
+		# sampling du df à 10%
+		df[annee] = df[annee].sample(frac=0.10, replace=False, random_state=1234)
+		
+		# gestion des dates
+		df[annee].an=df[annee].an+2000
+		df[annee]['date']=pd.to_datetime((df[annee].an*10000+df[annee].mois*100+df[annee].jour).apply(str),format='%Y%m%d', exact=False, errors='coerce')
+		df[annee]['day']= df[annee].date.dt.weekday
+		
+		# conversion de la longitude en 'float64'
+		df[annee]['long'] = pd.to_numeric(df[annee]['long'], errors='coerce')
+		
+		# conversion du CRS en mercator
+		k = 6378137
+		df[annee]["x"] = (df[annee]['long'] / 100000)* (k * np.pi / 180.0)
+		df[annee]["y"] = np.log(np.tan((90 + df[annee]['lat']/100000) * np.pi / 360.0)) * k
+		
+		# data cleaning
+		df[annee].dropna()
+		
+		print('(done) loading csv file for '+str(annee))
+
+		return df[annee]
+	
+	# chargement des dataframes
+	df = preprocess()
+	df['age']=(df.an+2000)-df.an_nais
+	
+	df_non_indemnes = df[df['grav']!=1]
+	df_tues = df[df['grav']==2]
+	
+	df_global = df
+	df_global['date']=pd.to_datetime((df_global.an*10000+df_global.mois*100+df_global.jour).apply(str),format='%Y%m%d', exact=False, errors='coerce')
+	df_global['day']=df_global.date.dt.day_name()
+	df_global['day']=pd.Categorical(df_global['day'],['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],ordered=True)
+	
+	print('(done) : preprocessing completed.')
+	
+	# ajout année sur le sidebar	 
 	st.sidebar.markdown("### Analyses sur l'année : "+str(annee))
 	
-	## GRAPHIQUES
-	###############
+	# recherche par mot-clés
+	search = st.text_input('Recherche de visualisations par mot-clés\n (en minuscule, séparé par des espaces)')
 	
+
+	# graphiques
+
 	
-	# carte intéractive BOKEH
+	## tableau des régions avec le plus d'accidentés pour comparé avec le plus de blessés
+	def Tableau_Des_Régions_Avec_Le_Plus_D_accidentés_Pour_Comparé_Avec_Le_Plus_De_Blessés():
+		x1 = pd.crosstab(df.grav, df.region, rownames=['gravite'], colnames=['region'])
+		st.write(x1)
+
+
+	## tableau des régions avec le plus de tués pour comparé avec le plus de blessés
+	def Tableau_Des_Régions_Avec_Le_Plus_De_Tués_Pour_Comparé_Avec_Le_Plus_De_Blessés():
+		x2 = pd.crosstab(df_tues.grav, df_tues.region, rownames=['nombre de Tués'], colnames=['region'])
+		st.write(x2)
+
+	## tableau des départements avec le plus de tués
+	def Tableau_Des_Départements_Avec_Le_Plus_De_Tués():
+		x3 = pd.crosstab(df_tues.grav, df_tues.departement, rownames=['nombre de Tués'], colnames=['departement'])
+		st.write(x3)
+
+	## tableau des régions avec le plus de blessés pour comparaison
+	def Tableau_Des_Régions_Avec_Le_Plus_De_Blessés_Pour_Comparaison():
+		x4 = pd.crosstab(df.grav, df.region, rownames=['gravite'], colnames=['region'])
+		st.write(x4)
+
+	## distribution des accidentés par région/département
+	def Distribution_Des_Accidentés_Par_Régiondépartement():
+		x5 = pd.pivot_table(df, index=['region', 'departement'], values='grav', aggfunc='count')
+		st.write(x5)
+
+	## tableau des nombre de tués par région et département
+	def Tableau_Des_Nombre_De_Tués_Par_Région_Et_Département():
+		pd.set_option("max_rows", None)
+		x6 = pd.pivot_table(df_tues, index=['region', 'departement'], values='grav', aggfunc='count')
+		st.write(x6)
+
+
+	## palmarès des régions avec le plus et le moins d'accidentés
+	def Palmarès_Des_Régions_Avec_Le_Plus_Et_Le_Moins_Daccidentés():
+		max_col = df['region'].value_counts().head(5)
+		min_col = df['region'].value_counts().tail(5)
+		fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(16,6), sharey=True)
+		sns.barplot(x=max_col.index, y=max_col, order=max_col.index, ax=ax1)
+		ax1.set_ylabel('nombre')
+		ax1.title.set_text("5 régions avec le plus d'accidents corporels")
+		labels = ax1.get_xticklabels()
+		plt.setp(labels, rotation=45, horizontalalignment='right')
+		sns.barplot(x=min_col.index, y=min_col, order=min_col.index, ax=ax2)
+		ax2.title.set_text("5 regions avec le moins d'accidents corporels")
+		ax2.set_ylabel('nombre')
+		plt.xticks(rotation=45);
+		st.pyplot(fig)
+
+	## palmarès des régions avec le plus et le moins de tués
+	def Palmarès_Des_Régions_Avec_Le_Plus_Et_Le_Moins_De_Tués():
+		max_col = df_tues['region'].value_counts().head(5)
+		min_col = df_tues['region'].value_counts().tail(5)
+		fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(16,6), sharey=True)
+		sns.barplot(x=max_col.index, y=max_col, order=max_col.index, ax=ax1)
+		ax1.title.set_text("5 régions avec le plus d'accidents mortels")
+		labels = ax1.get_xticklabels()
+		ax1.set_ylabel('nombre')
+		plt.setp(labels, rotation=45, horizontalalignment='right')
+		sns.barplot(x=min_col.index, y=min_col, order=min_col.index, ax=ax2)
+		ax2.title.set_text("5 régions avec le moins d'accidents mortels")
+		ax2.set_ylabel('nombre')
+		plt.xticks(rotation=45);
+		st.pyplot(fig)
 	
-	@st.cache(suppress_st_warning=True, allow_output_mutation=True,max_entries=None,ttl=60*2)
-	def France_Accidents_de_la_route_par_gravité():
-		# chargement du fond de carte
+	## palmarès des départements avec le plus d'accidents corporels
+	def Palmarès_Des_Départements_Avec_Le_Plus_Daccidents_Corporels():
+		max_col = df['departement'].value_counts().head(5)
+		min_col = df['departement'].value_counts().tail(5)
+		fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(16,6), sharey=True)
+		sns.barplot(x=max_col.index, y=max_col, order=max_col.index, ax=ax1)
+		ax1.title.set_text("5 départements avec le plus d'accidents corporels")
+		labels = ax1.get_xticklabels()
+		plt.setp(labels, rotation=45, horizontalalignment='right')
+		sns.barplot(x=min_col.index, y=min_col, order=min_col.index, ax=ax2)
+		ax2.title.set_text("5 départements avec le moins d'accidents corporels")
+		plt.xticks(rotation=45);
+		st.pyplot(fig)
+
+	## palmarès des Départements avec le plus et le moins de Tués
+	def Palmarès_Des_Départements_Avec_Le_Plus_Et_Le_Moins_De_Tués():
+		max_col_tues = df_tues['departement'].value_counts().head(5)
+		min_col_tues = df_tues['departement'].value_counts().tail(5)
+		fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(16,6), sharey=True)
+		sns.barplot(x=max_col_tues.index, y=max_col_tues, order=max_col_tues.index, ax=ax1)
+		ax1.title.set_text("5 départements avec le plus de Tués")
+		labels = ax1.get_xticklabels()
+		plt.setp(labels, rotation=45, horizontalalignment='right')
+		sns.barplot(x=min_col_tues.index, y=min_col_tues, order=min_col_tues.index, ax=ax2)
+		ax2.title.set_text("5 départements avec le moins de Tués")
+		plt.xticks(rotation=45);
+		st.pyplot(fig)
+
+	## distribution des accidenté(e)s par gravité de blessure
+	def Distribution_Des_Accidentées_Par_Gravité_De_Blessure():
+		fig, ax = plt.subplots(figsize=(10,5))
+		sns.countplot(x="grav",data=df_global)
+		plt.xticks([0,1,2,3],['Indemne',
+							  'Tué',
+							  'Blessé hospitalisé',
+							  'Blessé léger'])
+		plt.xlabel("Gravité du bléssé")
+		plt.ylabel('nombre')
+		plt.title("Distribution des accidenté(e)s par gravité des blessures");
+		st.pyplot(fig)
+	
+	##BOKEH##
+	## carte intéractive des accidentés par gravité
+	def Carte_Intéractive_Des_Accidentés_Par_Gravité():
+		df_geo = df[['lat','long','grav','an']]
+		df_geo['lat'] = pd.to_numeric(df_geo['lat'], errors='coerce')
+		df_geo['long'] = pd.to_numeric(df_geo['long'], errors='coerce')
+		df_geo['lat'] = df_geo['lat'] / 100000
+		df_geo['long'] = df_geo['long'] / 100000
+		k = 6378137
+		df_geo["x"] = (df_geo['long'])* (k * np.pi / 180.0)
+		df_geo["y"] = np.log(np.tan((90 + df_geo['lat']) * np.pi / 360.0)) * k
 		tile_provider = get_provider(OSM)
-
-		# boîte à outils
-		tools = "pan,wheel_zoom,box_zoom,reset"
-
-		# Création de la figure
-
+		tools = "pan,wheel_zoom,reset"
 		p = figure(x_range=(-1000000, 2000000), y_range=(5000000, 7000000),
 				   x_axis_type="mercator", y_axis_type="mercator",
 				   tools=tools,
 				   plot_width=800,
 				   plot_height=600,
-				   title='(France) Accidents de la route par gravité ('+str(annee)+')\n* Échantillon de 30% *'
+				   title='Accidents de la route par gravité ('+str(annee)+')'
 				   )
-
 		p.add_tile(tile_provider)
-
-		# source
-		df_bokeh = df_[annee]
-		geo_source_1 = ColumnDataSource(data=df_bokeh[df_bokeh['grav'] == 1])
-		geo_source_2 = ColumnDataSource(data=df_bokeh[df_bokeh['grav'] == 2])
-		geo_source_3 = ColumnDataSource(data=df_bokeh[df_bokeh['grav'] == 3])
-		geo_source_4 = ColumnDataSource(data=df_bokeh[df_bokeh['grav'] == 4])
-
-		# points
-		p1 = p.circle(x='x', y='y', size=5, alpha=0.3, source=geo_source_1, color='green', legend_label='Indemne')
-		p2 = p.circle(x='x', y='y', size=5, alpha=0.3, source=geo_source_2, color='red', legend_label='Tué')
-		p3 = p.circle(x='x', y='y', size=5, alpha=0.3, source=geo_source_3, color='orange', legend_label='Blessé hospitalisé')
-		p4 = p.circle(x='x', y='y', size=5, alpha=0.3, source=geo_source_4, color='yellow', legend_label='Blessé léger')
-
-
-		# paramètres de la figure
+		geo_source_1 = ColumnDataSource(data=df_geo[df_geo['grav'] == 1])
+		geo_source_2 = ColumnDataSource(data=df_geo[df_geo['grav'] == 2])
+		geo_source_3 = ColumnDataSource(data=df_geo[df_geo['grav'] == 3])
+		geo_source_4 = ColumnDataSource(data=df_geo[df_geo['grav'] == 4])
+		p1 = p.circle(x='x', y='y', size=5, alpha=0.5, source=geo_source_1, color='green', legend_label='Indemne')
+		p2 = p.circle(x='x', y='y', size=5, alpha=0.5, source=geo_source_4, color='yellow', legend_label='Blessé léger')
+		p3 = p.circle(x='x', y='y', size=5, alpha=0.5, source=geo_source_3, color='orange', legend_label='Blessé hospitalisé')
+		p4 = p.circle(x='x', y='y', size=5, alpha=0.5, source=geo_source_2, color='red', legend_label='Tué')
 		p.xgrid.grid_line_color = None
 		p.ygrid.grid_line_color = None
 		p.xaxis.major_label_text_color = None
@@ -320,341 +427,52 @@ elif nav == '3. Visualisation':
 		p.yaxis.minor_tick_line_color = None  
 		p.yaxis.axis_line_color = None
 		p.xaxis.axis_line_color = None
-		p.legend.label_text_font_size = "9pt"
-		p.legend.click_policy = "hide" 
-
+		p.legend.click_policy = "hide"
 		st.bokeh_chart(p)
-	if st.checkbox("Carte intéractive de la gravité des accidentés (France)"):
-		France_Accidents_de_la_route_par_gravité()
-		
-	# Distribution des accidentés par mois
 	
-	def distribution_des_accidentés_par_mois():
-		fig, ax = plt.subplots(figsize=(10,5))
-		sns.countplot(x="mois", data=df_[annee], palette='hls')
-		plt.xlabel('Mois')
-		plt.ylabel('Nombre')
-		plt.title('Distribution des accidentés par mois ('+str(annee)+')')
-		plt.xticks(ticks=np.arange(0,12,1),
-				   labels=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'],
-				   rotation=60
-				  );
-		st.pyplot(fig)
-	if st.checkbox("Distribution des accidentés par mois"):
-		distribution_des_accidentés_par_mois()
-		
-	# Distribution des accidentés par jour de la semaine
-	
-	def distribution_des_accidentés_par_jour_de_la_semaine():
-		fig, ax = plt.subplots(figsize=(10,5))
-		sns.countplot(df_[annee].day);
-		plt.xlabel('Jours')
-		plt.ylabel('Nombre')
-		plt.title('Distribution des accidentés par jour de la semaine ('+str(annee)+')')
-		plt.xticks(ticks=np.arange(0,7,1),
-				   labels=['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'],
-				   rotation=60
-				  );
-		st.pyplot(fig)
-	if st.checkbox("Distribution des accidentés par jour de la semaine"):
-		distribution_des_accidentés_par_jour_de_la_semaine()
-	
-	# Distribution des accidentés par heure de la journée
-	
-	def distribution_des_accidentés_par_heure_de_la_journée():
-		fig, ax = plt.subplots(figsize=(10,5))
-		sns.kdeplot(df_[annee].hrmn/100,ax=ax,shade=True,cut=0)
-		plt.xlabel('Heures')
-		plt.ylabel('Densité')
-		plt.title('Distribution des accidentés par heure de la journée ('+str(annee)+')')
-		st.pyplot(fig)
-	if st.checkbox("Distribution des accidentés par heure de la journée"):
-		distribution_des_accidentés_par_heure_de_la_journée()
-		
-	# ~ Distribution des accidentés par sexe
-	
-	def distribution_des_accidentés_par_sexe():
-		fig, ax = plt.subplots(figsize=(5,5))
-		sns.countplot(x="sexe",data=df_[annee])
-		plt.xticks([0,1],['M','F'])
-		plt.xlabel("Sexe de l'accidenté(e)")
-		plt.title('Distribution des accidentés par sexe')
-		st.pyplot(fig)
-	if st.checkbox("Distribution des accidentés par sexe"):
-		distribution_des_accidentés_par_sexe()
-	
-	# Distribution des accidenté(e)s par obstacles mobiles
-	
-	def distribution_des_accidenté_e_s_par_obstacles_mobiles():
-		fig, ax = plt.subplots(figsize=(10,5))
-		sns.countplot(x="obsm",data=df_[annee])
-		plt.xticks([0,1,2,3,4,5,6],['Aucun',
-									'Piéton',
-									'Véhicule',
-									'Véhicule sur rail',
-									'Animal domestique',
-									'Animal sauvage',
-									'Autre'])
-		plt.xticks(rotation=40)
-		plt.xlabel("Type d'obstacle mobile")
-		plt.title('Distribution des accidenté(e)s par obstacles mobiles ('+str(annee)+')')
-		st.pyplot(fig)
-	if st.checkbox("Distribution des accidenté(e)s par obstacles mobiles"):
-		distribution_des_accidenté_e_s_par_obstacles_mobiles()
-	
-	#### Distribution des accidenté(e)s par catégorie de `véhicule`
-	
-	def distribution_des_accidenté_e_s_par_catégorie_de_véhicule():
-		fig, ax = plt.subplots(figsize=(10,5))
-		sns.countplot(x="catv",data=df_[annee])
-		plt.xticks([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,
-					18,19,20,21,22,23,24,25,26,27,28,29,30,31,32],['01 - Bicyclette',
-																   '02 - Cyclomoteur <50cm3',
-																   '03 - Voiturette (Quadricycle à moteur carrossé)',
-																   '04 - scooter immatriculé',
-																   '05 - motocyclette',
-																   '06 - side-car',
-																   '07 - VL seul',
-																   '08 - VL + caravane',
-																   '09 - VL + remorque',
-																   '10 - VU seul 1,5T <= PTAC <= 3,5T avec ou sans remorque',
-																   '11 - VU (10) + caravane',
-																   '12 - VU (10) + remorque',
-																   '13 - PL seul 3,5T <PTCA <= 7,5T',
-																   '14 - PL seul > 7,5T',
-																   '15 - PL > 3,5T + remorque',
-																   '16 - Tracteur routier seul',
-																   '17 - Tracteur routier + semi-remorque',
-																   '18 - transport en commun',
-																   '19 - tramway',
-																   '20 - Engin spécial',
-																   '21 - Tracteur agricole',
-																   '30 - Scooter < 50 cm3',
-																   '31 - Motocyclette > 50 cm3 et <= 125 cm3',
-																   '32 - Scooter > 50 cm3 et <= 125 cm3',
-																   '33 - Motocyclette > 125 cm3',
-																   '34 - Scooter > 125 cm3',
-																   '35 - Quad léger <= 50 cm3 (Quadricycle à moteur non carrossé)',
-																   '36 - Quad lourd > 50 cm3 (Quadricycle à moteur non carrossé)',
-																   '37 - Autobus',
-																   '38 - Autocar',
-																   '39 - Train',
-																   '40 - Tramway',
-																   '99 - Autre véhicule'])
-		plt.xticks(rotation=90)
-		plt.xlabel("Catégorie de véhicule")
-		plt.ylabel('Nombre')
-		plt.title('Distribution des accidenté(e)s par catégorie de véhicule');
-		st.pyplot(fig)
-	if st.checkbox("Distribution des accidenté(e)s par catégorie de `véhicule`"):
-		distribution_des_accidenté_e_s_par_catégorie_de_véhicule()
-	
-# ~ Distribution des accidenté(e)s par catégorie de route
-	
-	def distribution_des_accidenté_e_s_par_catégorie_de_route():
-		fig, ax = plt.subplots(figsize=(10,5))
-		sns.countplot(x="catr",data=df_[annee])
-		plt.xticks([0,1,2,3,4,5,6],['1 - Autoroute',
-									'2 - Route nationale',
-									'3 - Route Départementale',
-									'4 - Voie Communale',
-									'5 - Hors réseau public',
-									'6 - Parc de stationnement ouvert à la circulation publique',
-									'9 - autre'])
-		plt.xticks(rotation=90)
-		plt.xlabel("Catégorie de route")
-		plt.ylabel('Nombre')
-		plt.title('Distribution des accidenté(e)s par catégorie de route')
-		st.pyplot(fig)
-	if st.checkbox("Distribution des accidenté(e)s par catégorie de route"):
-		distribution_des_accidenté_e_s_par_catégorie_de_route()
-	
-	# Distribution des accidenté(e)s par types de choc
-	
-	def distribution_des_accidenté_e_s_par_types_de_choc():
-		fig, ax = plt.subplots(figsize=(10,5))
-		sns.countplot(x="choc",data=df_[annee])
-		plt.xticks([0,1,2,3,4,5,6,7,8,9],['Aucun',
-										  'Avant',
-										  'Avant droit',
-										  'Avant gauche',
-										  'Arrière',
-										  'Arrière droit',
-										  'Arrière gauche',
-										  'Côté droit',
-										  'Côté gauche',
-										  'Chocs multiples (tonneaux)'])
-		plt.xticks(rotation=40)
-		plt.xlabel("Type de choc")
-		plt.title('Distribution des types de choc des accidenté(e)s ('+str(annee)+')');
-		st.pyplot(fig)
-	if st.checkbox("Distribution des accidenté(e)s par types de choc"):
-		distribution_des_accidenté_e_s_par_types_de_choc()
-	
-	# Distribution des accidenté(e)s par types de collision
-	
-	def distribution_des_accidenté_e_s_par_types_de_collision():
-		fig, ax = plt.subplots(figsize=(10,5))
-		sns.countplot(x="col",data=df_[annee])
-		plt.xticks(rotation=40)
-		plt.xlabel("Type de collision")
-		plt.xticks([0,1,2,3,4,5,6],
-					['Deux véhicules - frontale','Deux véhicules – par l’arrière','Deux véhicules – par le coté',
-					'Trois véhicules et plus – en chaîne','Trois véhicules et plus - collisions multiples',
-					'Autre collision','Sans collision'],
-					rotation=75
-					)
-		plt.title('Distribution des accidenté(e)s par types de collisions ('+str(annee)+')');
-		st.pyplot(fig)
-	if st.checkbox("Distribution des accidenté(e)s par types de collision"):
-		distribution_des_accidenté_e_s_par_types_de_collision()
-
-	# Distribution des accidenté(e)s par motif de trajet
-	
-	def distribution_des_accidenté_e_s_par_motif_de_trajet():
-		fig, ax = plt.subplots(figsize=(10,5))
-		sns.countplot(x="trajet",data=df_[annee])
-		plt.xticks([0,1,2,3,4,5,6],['Non renseigné',
-									'Domicile – travail',
-									'Domicile – école',
-									'Courses – achats',
-									'Utilisation professionnelle',
-									'Promenade – loisirs',
-									'Autre'])
-		plt.xticks(rotation=40)
-		plt.xlabel("Type de trajet")
-		plt.title('Distribution des accidenté(e)s par motif de trajet ('+str(annee)+')');
-		st.pyplot(fig)
-	if st.checkbox("Distribution des accidenté(e)s par motif de trajet"):
-		distribution_des_accidenté_e_s_par_motif_de_trajet()
-	
-	# Distribution des accidenté(e)s par type d'accompagnement
-	
-	def distribution_des_accidenté_e_s_par_type_d_accompagnement():
-		fig, ax = plt.subplots()
-		sns.countplot(x="etatp",data=df_[annee])
-		plt.xticks([0,1,2,3],['Non renseigné','Seul','Accompagné','En groupe'])
-		plt.xlabel("Accompagnement de l'accidenté(e)")
-		plt.title('Distribution des accidentés par accompagnement ('+str(annee)+')');
-		st.pyplot(fig)
-	if st.checkbox("Distribution des accidenté(e)s par type d'accompagnement"):
-		distribution_des_accidenté_e_s_par_type_d_accompagnement()
-	
-	# Distribution des accidenté(e)s par infrastructure
-	
-	def distribution_des_accidenté_e_s_par_infrastructure():
-		fig, ax = plt.subplots(figsize=(10,5))
-		sns.countplot(x="infra",data=df_[annee])
-		plt.xticks([0,1,2,3,4,5,6,7],
-					['Aucun','Souterrain / Tunnel','Pont / Autopont',"Bretelle d’échangeur ou de raccordement",
-					'Voie ferrée','Carrefour aménagé','Zone piétonne','Zone de péage'],
-					rotation=60)
-		plt.xlabel("Type d'infrastructure")
-		plt.title('Distribution des accidenté(e)s par infrastructure ('+str(annee)+')');
-		st.pyplot(fig)
-	if st.checkbox("Distribution des accidenté(e)s par infrastructure"):
-		distribution_des_accidenté_e_s_par_infrastructure()
-	
-	# ~ Distribution des accidenté(e)s par localisation
-	
-	def distribution_des_accidenté_e_s_par_localisation():
-		fig, ax = plt.subplots(figsize=(5,5))
-		sns.countplot(x="agg",data=df_[annee])
-		plt.xticks([0,1],['Hors agglomération','En agglomération'])
-		plt.ylabel('Nombre')
-		plt.xlabel("Localisation")
-		plt.title('Distribution des accidenté(e)s par localisation')
-		st.pyplot(fig)
-	if st.checkbox("Distribution des accidenté(e)s par localisation"):
-		distribution_des_accidenté_e_s_par_localisation()
-	
-	# ~ Distribution des accidenté(e)s par situation de l'accident
-	
-	def distribution_des_accidenté_e_s_par_situation_de_l_accident():
-		fig, ax = plt.subplots(figsize=(10,5))
-		sns.countplot(x="situ",data=df_[annee])
-		plt.xticks([0,1,2,3,4,5],['Aucun',
-								  'Sur chaussée',
-								  'Sur bande d’arrêt d’urgence',
-								  'Sur accotement',
-								  'Sur trottoir',
-								  'Sur piste cyclable'])
-		plt.xticks(rotation=30)
-		plt.xlabel("Situation de l'accident")
-		plt.ylabel('Nombre')
-		plt.yscale('log')
-		plt.title("Distribution des accidenté(e)s par situation de l'accident");
-		st.pyplot(fig)
-	if st.checkbox("Distribution des accidenté(e)s par situation de l'accident"):
-		distribution_des_accidenté_e_s_par_situation_de_l_accident()
-	
-	# ~ Distribution des accidenté(e)s par gravité des blessures
-	
-	def distribution_des_accidenté_e_s_par_gravité_des_blessures():
-		fig, ax = plt.subplots(figsize=(10,5))
-		sns.countplot(x="grav",data=df_[annee])
-		plt.xticks([0,1,2,3],['Indemne',
-						  'Tué',
-						  'Blessé hospitalisé',
-						  'Blessé léger'])
-		plt.xlabel("Gravité du bléssé")
-		plt.ylabel('Nombre')
-		plt.title("Distribution des accidenté(e)s par gravité des blessures");
-		st.pyplot(fig)
-	if st.checkbox("Distribution des accidenté(e)s par gravité des blessures"):
-		distribution_des_accidenté_e_s_par_gravité_des_blessures()
-	
-	#### Distribution des accidenté(e)s par gravité des blessures en fonction des `mois de l'année`
-	
-	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_mois_de_l_année():
+	## distribution des accidentés par mois
+	def Distribution_Des_Accidentés_Par_Mois():
 		fig, ax = plt.subplots(figsize=(10,10))
-		sns.countplot(x="grav", hue="mois", data=df_[annee]);
+		sns.countplot(x="grav", hue="mois", data=df_global);
 		plt.legend(labels=['Janvier',
-					   'Février',
-					   'Mars',
-					   'Avril',
-					   'Mai',
-					   'Juin',
-					   'Juillet',
-					   'Août',
-					   'Septembre',
-					   'Octobre',
-					   'Novembre',
-					   'Décembre'])
+						   'Février',
+						   'Mars',
+						   'Avril',
+						   'Mai',
+						   'Juin',
+						   'Juillet',
+						   'Août',
+						   'Septembre',
+						   'Octobre',
+						   'Novembre',
+						   'Décembre'])
 		plt.xticks([0,1,2,3],['Indemne',
-						  'Tué',
-						  'Blessé hospitalisé',
-						  'Blessé léger'])
-		plt.xlabel("Gravité du bléssé")
-		plt.ylabel('Nombre')
+							  'Tué',
+							  'Blessé hospitalisé',
+							  'Blessé léger'])
+		plt.xlabel("Gravité du blessé")
+		plt.ylabel('nombre')
 		plt.title("Distribution des accidenté(e)s par gravité des blessures en fonction des mois de l'année");
 		st.pyplot(fig)
-	if st.checkbox("Distribution des accidenté(e)s par gravité des blessures en fonction des `mois de l'année`"):
-		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_mois_de_l_année()
-		
-	# ~ Distribution des accidenté(e)s par gravité des blessures en fonction des jours de la semaine
 	
-	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_jours_de_la_semaine():
+	## distribution des accidentés par jour de la semaine
+	def Distribution_Des_Accidentés_Par_Jour_De_La_Semaine():
 		fig, ax = plt.subplots(figsize=(10,5))
-		sns.countplot(x="grav", hue="day", data=df_[annee]);
+		sns.countplot(x="grav", hue="day", data=df_global);
 		plt.legend(labels=['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'])
 		plt.xticks([0,1,2,3],['Indemne',
-						  'Tué',
-						  'Blessé hospitalisé',
-						  'Blessé léger'])
+							  'Tué',
+							  'Blessé hospitalisé',
+							  'Blessé léger'])
 		plt.xlabel("Gravité du bléssé")
-		plt.ylabel('Nombre')
-		plt.yscale('log')
+		plt.ylabel('nombre')
 		plt.title("Distribution des accidenté(e)s par gravité des blessures en fonction des jours de la semaine");
 		st.pyplot(fig)
-	if st.checkbox("Distribution des accidenté(e)s par gravité des blessures en fonction des jours de la semaine"):
-		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_mois_de_l_année()
-	# ~ Distribution des accidenté(e)s par gravité des blessures en fonction de l'heure
 	
-	
-	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_de_l_heure():
+	## distribution par heure / minutes
+	def Distribution_Par_Heure_Minutes():
 		fig, ax = plt.subplots(figsize=(11,5))
-		sns.kdeplot(x='hrmn',hue='grav',multiple="stack",data=df_[annee])
+		sns.kdeplot(x='hrmn',hue='grav',multiple="stack",data=df_global)
 		plt.legend(labels=['Blessé léger','Blessé hospitalisé','Tué','Indemne'])
 		plt.xticks([0,500,1000,1500,2000],['0:00','5:00','10:00','15:00','20:00'])
 		plt.xlim(right=2500)
@@ -662,561 +480,217 @@ elif nav == '3. Visualisation':
 		plt.ylabel('Densité')
 		plt.title("Distribution des accidenté(e)s par gravité des blessures en fonction de l'heure");
 		st.pyplot(fig)
-	if st.checkbox("Distribution des accidenté(e)s par gravité des blessures en fonction de l'heure"):
-		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_de_l_heure()
 		
-	# ~ Distribution des accidenté(e)s par gravité des blessures en fonction du sexe
-	
-	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_du_sexe():
-		fig, ax = plt.subplots(figsize=(10,5))
-		sns.countplot(x="grav", hue="sexe", data=df_[annee]);
-		plt.legend(labels=['M','F'])
-		plt.xticks([0,1,2,3],['Indemne',
-						  'Tué',
-						  'Blessé hospitalisé',
-						  'Blessé léger'])
-		plt.xlabel("Gravité du bléssé")
-		plt.ylabel('Nombre')
-		plt.title('Distribution des accidenté(e)s par gravité des blessures en fonction du sexe');
-		st.pyplot(fig)
-	if st.checkbox("Distribution des accidenté(e)s par gravité des blessures en fonction du sexe"):
-		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_du_sexe()
-		
-	#### Distribution des accidenté(e)s par gravité des blessures en fonction des obstacles `fixes` & `mobiles`
-	
-	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_obstacles_fixes_mobiles():
+	## graphique par catégorie de véhicule
+	def Graphique_Par_Catégorie_De_Véhicule():
 		fig, ax = plt.subplots(figsize=(15,15))
-		sns.countplot(x="grav", hue="obs", data=df_[annee]);
-		plt.legend(labels=['Sans objet',
-					   'Véhicule en stationnement',
-					   'Arbre','Glissière métallique',
-					   'Glissière béton',
-					   'Autre glissière',
-					   'Bâtiment, mur, pile de pont',
-					   'Support de signalisation verticale ou poste d’appel d’urgence',
-					   'Poteau',
-					   'Mobilier urbain',
-					   'Parapet',
-					   'Ilot, refuge, borne haute',
-					   'Bordure de trottoir',
-					   'Fossé, talus, paroi rocheuse',
-					   'Autre obstacle fixe sur chaussée',
-					   'Autre obstacle fixe sur trottoir ou accotement',
-					   'Sortie de chaussée sans obstacle',
-					   'Buse – tête d’aqueduc'])
-		plt.xticks([0,1,2,3],['Indemne',
-						  'Tué',
-						  'Blessé hospitalisé',
-						  'Blessé léger'])
-		plt.xlabel("Gravité du bléssé")
-		plt.ylabel('Nombre')
-		plt.title("Distribution des accidenté(e)s par gravité des blessures en fonction des obstacles fixes rencontrés");
-		st.pyplot(fig)
-	if st.checkbox("Distribution des accidenté(e)s par gravité des blessures en fonction des obstacles `fixes` & `mobiles`"):
-		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_obstacles_fixes_mobiles()
-		
-	# ~ Distribution des accidenté(e)s par gravité des blessures en fonction des obstacles mobiles rencontrés
-	
-	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_obstacles_mobiles_rencontrés():
-		
-		fig, ax = plt.subplots(figsize=(10,5))
-		sns.countplot(x="grav", hue="obsm", data=df_[annee]);
-		plt.legend(labels=['Aucun',
-					   'Piéton',
-					   'Véhicule',
-					   'Véhicule sur rail',
-					   'Animal domestique',
-					   'Animal sauvage',
-					   'Autre'])
-		plt.xticks([0,1,2,3],['Indemne',
-						  'Tué',
-						  'Blessé hospitalisé',
-						  'Blessé léger'])
-		plt.xlabel("Gravité du bléssé")
-		plt.ylabel('Nombre')
-		plt.title("Distribution des accidenté(e)s par gravité des blessures en fonction des obstacles mobiles rencontrés");
-		st.pyplot(fig)
-	if st.checkbox("Distribution des accidenté(e)s par gravité des blessures en fonction des obstacles mobiles rencontrés"):
-		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_obstacles_mobiles_rencontrés()
-	
-	#### Distribution des accidenté(e)s par gravité des blessures en fonction des catégories de `véhicule`
-	
-	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_catégories_de_véhicule():
-		fig, ax = plt.subplots(figsize=(20,20))
-		sns.countplot(x="grav", hue="catv", data=df_[annee]);
+		sns.countplot(x="grav", hue="catv", data=df_global);
 		plt.legend(labels=['01 - Bicyclette',
-					   '02 - Cyclomoteur <50cm3',
-					   '03 - Voiturette (Quadricycle à moteur carrossé)',
-					   '04 - scooter immatriculé',
-					   '05 - motocyclette',
-					   '06 - side-car',
-					   '07 - VL seul',
-					   '08 - VL + caravane',
-					   '09 - VL + remorque',
-					   '10 - VU seul 1,5T <= PTAC <= 3,5T avec ou sans remorque',
-					   '11 - VU (10) + caravane',
-					   '12 - VU (10) + remorque',
-					   '13 - PL seul 3,5T <PTCA <= 7,5T',
-					   '14 - PL seul > 7,5T',
-					   '15 - PL > 3,5T + remorque',
-					   '16 - Tracteur routier seul',
-					   '17 - Tracteur routier + semi-remorque',
-					   '18 - transport en commun',
-					   '19 - tramway',
-					   '20 - Engin spécial',
-					   '21 - Tracteur agricole',
-					   '30 - Scooter < 50 cm3',
-					   '31 - Motocyclette > 50 cm3 et <= 125 cm3',
-					   '32 - Scooter > 50 cm3 et <= 125 cm3',
-					   '33 - Motocyclette > 125 cm3',
-					   '34 - Scooter > 125 cm3',
-					   '35 - Quad léger <= 50 cm3 (Quadricycle à moteur non carrossé)',
-					   '36 - Quad lourd > 50 cm3 (Quadricycle à moteur non carrossé)',
-					   '37 - Autobus',
-					   '38 - Autocar',
-					   '39 - Train',
-					   '40 - Tramway',
-					   '99 - Autre véhicule'])
+						   '02 - Cyclomoteur <50cm3',
+						   '03 - Voiturette (Quadricycle à moteur carrossé)',
+						   '04 - scooter immatriculé',
+						   '05 - motocyclette',
+						   '06 - side-car',
+						   '07 - VL seul',
+						   '08 - VL + caravane',
+						   '09 - VL + remorque',
+						   '10 - VU seul 1,5T <= PTAC <= 3,5T avec ou sans remorque',
+						   '11 - VU (10) + caravane',
+						   '12 - VU (10) + remorque',
+						   '13 - PL seul 3,5T <PTCA <= 7,5T',
+						   '14 - PL seul > 7,5T',
+						   '15 - PL > 3,5T + remorque',
+						   '16 - Tracteur routier seul',
+						   '17 - Tracteur routier + semi-remorque',
+						   '18 - transport en commun',
+						   '19 - tramway',
+						   '20 - Engin spécial',
+						   '21 - Tracteur agricole',
+						   '30 - Scooter < 50 cm3',
+						   '31 - Motocyclette > 50 cm3 et <= 125 cm3',
+						   '32 - Scooter > 50 cm3 et <= 125 cm3',
+						   '33 - Motocyclette > 125 cm3',
+						   '34 - Scooter > 125 cm3',
+						   '35 - Quad léger <= 50 cm3 (Quadricycle à moteur non carrossé)',
+						   '36 - Quad lourd > 50 cm3 (Quadricycle à moteur non carrossé)',
+						   '37 - Autobus',
+						   '38 - Autocar',
+						   '39 - Train',
+						   '40 - Tramway',
+						   '99 - Autre véhicule'])
 		plt.xticks([0,1,2,3],['Indemne',
-						  'Tué',
-						  'Blessé hospitalisé',
-						  'Blessé léger'])
-		plt.xlabel("Gravité du bléssé")
-		plt.ylabel('Nombre')
+							  'Tué',
+							  'Blessé hospitalisé',
+							  'Blessé léger'])
+		plt.xlabel("Gravité du blessé")
+		plt.ylabel('nombre')
 		plt.title('Distribution des accidenté(e)s par gravité des blessures en fonction des catégories de véhicule');
 		st.pyplot(fig)
-	if st.checkbox("Distribution des accidenté(e)s par gravité des blessures en fonction des catégories de `véhicule`"):
-		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_catégories_de_véhicule()
 	
-	# ~ Distribution des accidenté(e)s par gravité des blessures en fonction des catégories de route
-	
-	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_catégories_de_route():
+	## graphique par catégorie de route
+	def Graphique_Par_Catégorie_De_Route():
 		fig, ax = plt.subplots(figsize=(10,5))
-		sns.countplot(x="grav", hue="catr", data=df_[annee]);
+		sns.countplot(x="grav", hue="catr", data=df_global);
 		plt.legend(labels=['1 - Autoroute',
-					   '2 - Route nationale',
-					   '3 - Route Départementale',
-					   '4 - Voie Communale',
-					   '5 - Hors réseau public',
-					   '6 - Parc de stationnement ouvert à la circulation publique',
-					   '9 - autre'])
+						   '2 - Route nationale',
+						   '3 - Route Départementale',
+						   '4 - Voie Communale',
+						   '5 - Hors réseau public',
+						   '6 - Parc de stationnement ouvert à la circulation publique',
+						   '9 - autre'])
 		plt.xticks([0,1,2,3],['Indemne',
-						  'Tué',
-						  'Blessé hospitalisé',
-						  'Blessé léger'])
-		plt.xlabel("Gravité du bléssé")
-		plt.ylabel('Nombre')
+							  'Tué',
+							  'Blessé hospitalisé',
+							  'Blessé léger'])
+		plt.xlabel("Gravité du blessé")
+		plt.ylabel('nombre')
 		plt.title('Distribution des accidenté(e)s par gravité des blessures en fonction des catégories de route');
 		st.pyplot(fig)
-	if st.checkbox("Distribution des accidenté(e)s par gravité des blessures en fonction des catégories de route"):
-		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_catégories_de_route()
 	
-	# ~ Distribution des accidenté(e)s par gravité des blessures en fonction des catégories d'usagers
-	
-	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_catégories_d_usagers():
+	## graphique par type de collision
+	def Graphique_Par_Type_De_Collision():
 		fig, ax = plt.subplots(figsize=(10,5))
-		sns.countplot(x="grav", hue="catu", data=df_[annee]);
-		plt.legend(labels=['1 - Conducteur',
-					   '2 - Passager',
-					   '3 - Piéton'])
-		plt.xticks([0,1,2,3],['Indemne',
-						  'Tué',
-						  'Blessé hospitalisé',
-						  'Blessé léger'])
-		plt.xlabel("Gravité du bléssé")
-		plt.ylabel('Nombre')
-		plt.title("Distribution des accidenté(e)s par gravité des blessures en fonction des catégories d'usagers");
-		st.pyplot(fig)
-	if st.checkbox("Distribution des accidenté(e)s par gravité des blessures en fonction des catégories d'usagers"):
-		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_catégories_d_usagers()
-	
-	#### Distribution des accidenté(e)s par gravité des blessures en fonction des types de `point de choc`
-	
-	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_types_de_point_de_choc():
-		fig, ax = plt.subplots(figsize=(10,10))
-		sns.countplot(x="grav", hue="choc", data=df_[annee]);
-		plt.legend(labels=['Aucun',
-					   'Avant',
-					   'Avant droit',
-					   'Avant gauche',
-					   'Arrière',
-					   'Arrière droit',
-					   'Arrière gauche',
-					   'Côté droit',
-					   'Côté gauche',
-					   'Chocs multiples (tonneaux)'])
-		plt.xticks([0,1,2,3],['Indemne',
-						  'Tué',
-						  'Blessé hospitalisé',
-						  'Blessé léger'])
-		plt.xlabel("Gravité du bléssé")
-		plt.ylabel('Nombre')
-		plt.title('Distribution des accidenté(e)s par gravité des blessures en fonction du type de point de choc');
-		st.pyplot(fig)
-	if st.checkbox("Distribution des accidenté(e)s par gravité des blessures en fonction des types de `point de choc`"):
-		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_types_de_point_de_choc()
-	
-	# ~ Distribution des accidenté(e)s par gravité des blessures en fonction du type de collision
-	
-	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_du_type_de_collision():
-		fig, ax = plt.subplots(figsize=(10,5))
-		sns.countplot(x="grav", hue="col", data=df_[annee]);
+		sns.countplot(x="grav", hue="col", data=df_global);
 		plt.legend(labels=['Deux véhicules - frontale',
-					   'Deux véhicules - par l’arrière',
-					   'Deux véhicules - par le coté',
-					   'Trois véhicules et plus – en chaîne',
-					   'Trois véhicules et plus - collisions multiples',
-					   'Autre collision',
-					   'Sans collision'])
+						   'Deux véhicules - par l’arrière',
+						   'Deux véhicules - par le coté',
+						   'Trois véhicules et plus – en chaîne',
+						   'Trois véhicules et plus - collisions multiples',
+						   'Autre collision',
+						   'Sans collision'])
 		plt.xticks([0,1,2,3],['Indemne',
-						  'Tué',
-						  'Blessé hospitalisé',
-						  'Blessé léger'])
-		plt.xlabel("Gravité du bléssé")
-		plt.ylabel('Nombre')
+							  'Tué',
+							  'Blessé hospitalisé',
+							  'Blessé léger'])
+		plt.xlabel("Gravité du blessé")
+		plt.ylabel('nombre')
 		plt.title("Distribution des accidenté(e)s par gravité des blessures en fonction du type de collision");
 		st.pyplot(fig)
-	if st.checkbox("Distribution des accidenté(e)s par gravité des blessures en fonction du type de collision"):
-		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_du_type_de_collision()
-	
-	# ~ Distribution des accidenté(e)s par gravité des blessures en fonction du type de trajet
-	
-	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_du_type_de_trajet():
+
+	## proportion masculin / féminin (accidentés)
+	def Proportion_Masculin_Féminin_accidentés():
+		fig, ax = plt.subplots(figsize=(5,5))
+		sns.countplot(x="sexe",data=df)
+		plt.xticks([0,1],['M','F'])
+		plt.xlabel("Sexe de l'accidenté(e)")
+		plt.ylabel("nombre Usagers")
+		plt.title('Distribution des accidentés par sexe');
+		st.pyplot(fig)
+
+	## proportion masculin/féminin ( tués )
+	def Proportion_Masculinféminin_Tués_():
+		fig, ax = plt.subplots(figsize=(5,5))
+		sns.countplot(x="sexe",data=df_tues)
+		plt.xticks([0,1],['M','F'])
+		plt.xlabel("Sexe de l'accidenté(e)")
+		plt.ylabel("nombre de Tués")
+		plt.title("Distribution des Tué(e)s par sexe");
+		st.pyplot(fig)
+
+	## proportion masculin/féminin ( tués par age )
+	def Proportion_Masculinféminin_Tués_Par_Age_():
+		g = sns.FacetGrid(df_tues, col='sexe')
+		g.map(plt.hist, 'age');
+		st.pyplot(g)
+
+	## graphique par sexe
+	def Graphique_Par_Sexe():
 		fig, ax = plt.subplots(figsize=(10,5))
-		sns.countplot(x="grav", hue="trajet", data=df_[annee]);
+		sns.countplot(x="grav", hue="sexe", data=df_global);
+		plt.legend(labels=['M','F'])
+		plt.xticks([0,1,2,3],['Indemne',
+							  'Tué',
+							  'Blessé hospitalisé',
+							  'Blessé léger'])
+		plt.xlabel("Gravité du blessé")
+		plt.ylabel('nombre')
+		plt.title('Distribution des accidenté(e)s par gravité des blessures en fonction du sexe');
+		st.pyplot(fig)
+	
+	## distribution des accidenté(e)s par gravité des blessures en fonction de l'âge
+	def Distribution_Des_Accidentées_Par_Gravité_Des_Blessures_En_Fonction_De_Lâge():
+		fig, ax = plt.subplots(figsize=(11,5))
+		sns.kdeplot(x='age',hue='grav',multiple="stack",data=df_global)
+		plt.legend(labels=['Blessé léger','Blessé hospitalisé','Tué','Indemne'])
+		plt.xlim(right=110)
+		plt.xlabel('Age')
+		plt.ylabel('Densité')
+		plt.title("Distribution des accidenté(e)s par gravité des blessures en fonction de l'âge");
+		st.pyplot(fig)
+	
+	## graphique par catégorie d'usager
+	def Graphique_Par_Catégorie_Dusager():
+		fig, ax = plt.subplots(figsize=(10,5))
+		sns.countplot(x="grav", hue="catu", data=df_global);
+		plt.legend(labels=['1 - Conducteur',
+						   '2 - Passager',
+						   '3 - Piéton',
+						   '4 - Pieton Roller/Trotinette'])
+		plt.xticks([0,1,2,3],['Indemne',
+							  'Tué',
+							  'Blessé hospitalisé',
+							  'Blessé léger'])
+		plt.xlabel("Gravité du bléssé")
+		plt.ylabel('nombre')
+		plt.title("Distribution des accidenté(e)s par gravité des blessures en fonction des catégories d'usagers");
+		st.pyplot(fig)
+	
+	## graphique par type de trajet
+	def Graphique_Par_Type_De_Trajet():
+		fig, ax = plt.subplots(figsize=(10,10))
+		sns.countplot(x="grav", hue="trajet", data=df_global);
 		plt.legend(labels=['Non renseigné',
-					   'Domicile – travail',
-					   'Domicile – école',
-					   'Courses – achats',
-					   'Utilisation professionnelle',
-					   'Promenade – loisirs',
-					   'Autre'])
+						   'Domicile – travail',
+						   'Domicile – école',
+						   'Courses – achats',
+						   'Utilisation professionnelle',
+						   'Promenade – loisirs',
+						   'Autre'])
 		plt.xticks([0,1,2,3],['Indemne',
-						  'Tué',
-						  'Blessé hospitalisé',
-						  'Blessé léger'])
+							  'Tué',
+							  'Blessé hospitalisé',
+							  'Blessé léger'])
 		plt.xlabel("Gravité du bléssé")
-		plt.ylabel('Nombre')
-		plt.title('Distribution des accidenté(e)s par gravité des blessures en fonction du type de trajet');
+		plt.ylabel('nombre')
+		plt.title('Distribution des accidenté(e)s par gravité des blessures en fonction du type de trajet');	
 		st.pyplot(fig)
-	if st.checkbox("Distribution des accidenté(e)s par gravité des blessures en fonction du type de trajet"):
-		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_du_type_de_trajet()
 	
-	#### Distribution des accidenté(e)s par gravité des blessures en fonction de variables complémentaires
+	# FIN VISUALISATIONS #
+	######################
 	
-	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_de_variables_complémentaires():
-		fig, ax = plt.subplots(figsize=(10,5))
-		sns.countplot(x="grav", hue="agg", data=df_[annee]);
-		plt.legend(labels=['Hors agglomération','En agglomération'])
-		plt.xticks([0,1,2,3],['Indemne',
-						  'Tué',
-						  'Blessé hospitalisé',
-						  'Blessé léger'])
-		plt.xlabel("Gravité du bléssé")
-		plt.ylabel('Nombre')
-		plt.title('Distribution des accidenté(e)s par gravité des blessures en fonction de la localisation');
-		st.pyplot(fig)
-	if st.checkbox("Distribution des accidenté(e)s par gravité des blessures en fonction de variables complémentaires"):
-		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_de_variables_complémentaires()
-	
-	# ~ Distribution des accidenté(e)s par gravité des blessures en fonction du type d'aménagement / d'infrastructure
-	
-	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_du_type_d_aménagement_d_infrastructure():
-		fig, ax = plt.subplots(figsize=(10,10))
-		sns.countplot(x="grav", hue="infra", data=df_[annee]);
-		plt.legend(labels=['Aucun',
-					   'Souterrain - tunnel',
-					   'Pont - autopont',
-					   'Bretelle d’échangeur ou de raccordement',
-					   'Voie ferrée',
-					   'Carrefour aménagé',
-					   'Zone piétonne',
-					   'Zone de péage'])
-		plt.xticks([0,1,2,3],['Indemne',
-						  'Tué',
-						  'Blessé hospitalisé',
-						  'Blessé léger'])
-		plt.xlabel("Gravité du bléssé")
-		plt.ylabel('Nombre')
-		plt.yscale('log')
-		plt.title("Distribution des accidenté(e)s par gravité des blessures en fonction du type d'aménagement / d'infrastructure");
-		st.pyplot(fig)
-	if st.checkbox("Distribution des accidenté(e)s par gravité des blessures en fonction du type d'aménagement / d'infrastructure"):
-		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_du_type_d_aménagement_d_infrastructure()
-		
-	# ~ Distribution des accidenté(e)s par gravité des blessures en fonction de la situation de l'accident
-	
-	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_de_la_situation_de_l_accident():
-		fig, ax = plt.subplots(figsize=(10,5))
-		sns.countplot(x="grav", hue="situ", data=df_[annee]);
-		plt.legend(labels=['Aucun',
-					   'Sur chaussée',
-					   'Sur bande d’arrêt d’urgence',
-					   'Sur accotement',
-					   'Sur trottoir',
-					   'Sur piste cyclable'])
-		plt.xticks([0,1,2,3],['Indemne',
-						  'Tué',
-						  'Blessé hospitalisé',
-						  'Blessé léger'])
-		plt.xlabel("Gravité du bléssé")
-		plt.ylabel('Nombre')
-		plt.title("Distribution des accidenté(e)s par gravité des blessures en fonction de la situation de l'accident");
-		st.pyplot(fig)
-	if st.checkbox("Distribution des accidenté(e)s par gravité des blessures en fonction de la situation de l'accident"):
-		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_de_la_situation_de_l_accident()
-	# ~ Distribution des accidenté(e)s par gravité des blessures en fonction des conditions d'éclairage
-	
-	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_conditions_d_éclairage():
-		fig, ax = plt.subplots(figsize=(10,5))
-		sns.countplot(x="grav", hue="lum", data=df_[annee]);
-		plt.legend(labels=['Plein jour',
-					   'Crépuscule ou aube',
-					   'Nuit sans éclairage public',
-					   'Nuit avec éclairage public non allumé',
-					   'Nuit avec éclairage public allumé'])
-		plt.xticks([0,1,2,3],['Indemne',
-						  'Tué',
-						  'Blessé hospitalisé',
-						  'Blessé léger'])
-		plt.xlabel("Gravité du bléssé")
-		plt.ylabel('Nombre')
-		plt.title("Distribution des accidenté(e)s par gravité des blessures en fonction des conditions d'éclairage");
-		st.pyplot(fig)
-	if st.checkbox("Distribution des accidenté(e)s par gravité des blessures en fonction des conditions d'éclairage"):
-		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_conditions_d_éclairage()
-	
-	# ~ Distribution des accidenté(e)s par gravité des blessures en fonction des conditions atmosphériques
-	
-	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_conditions_atmosphériques():
-		fig, ax = plt.subplots(figsize=(10,10))
-		sns.countplot(x="grav", hue="atm", data=df_[annee]);
-		plt.legend(labels=['Normale',
-					   'Pluie légère',
-					   'Pluie forte',
-					   'Neige - grêle',
-					   'Brouillard - fumée',
-					   'Vent fort - tempête',
-					   'Temps éblouissant',
-					   'Temps couvert',
-					   'Autre'])
-		plt.xticks([0,1,2,3],['Indemne',
-						  'Tué',
-						  'Blessé hospitalisé',
-						  'Blessé léger'])
-		plt.xlabel("Gravité du bléssé")
-		plt.ylabel('Nombre')
-		plt.title('Distribution des accidenté(e)s par gravité des blessures en fonction des conditions atmosphériques');
-		st.pyplot(fig)
-	if st.checkbox("Distribution des accidenté(e)s par gravité des blessures en fonction des conditions atmosphériques"):
-		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_des_conditions_atmosphériques()
-	
-	# ~ Distribution des accidenté(e)s par gravité des blessures en fonction de l'état de la surface
-	
-	def distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_de_l_état_de_la_surface():
-		fig, ax = plt.subplots(figsize=(10,10))
-		sns.countplot(x="grav", hue="surf", data=df_[annee]);
-		plt.legend(labels=['Non renseigné',
-					   'Normale',
-					   'Mouillée',
-					   'Flaques',
-					   'Inondée',
-					   'Enneigée',
-					   'Boue',
-					   'Verglacée',
-					   'Corps gras – huile',
-					   'Autre'])
-		plt.xticks([0,1,2,3],['Indemne',
-						  'Tué',
-						  'Blessé hospitalisé',
-						  'Blessé léger'])
-		plt.xlabel("Gravité du bléssé")
-		plt.ylabel('Nombre')
-		plt.title("Distribution des accidenté(e)s par gravité des blessures en fonction de l'état de la surface");
-		st.pyplot(fig)
-	if st.checkbox("Distribution des accidenté(e)s par gravité des blessures en fonction de l'état de la surface"):
-		distribution_des_accidenté_e_s_par_gravité_des_blessures_en_fonction_de_l_état_de_la_surface()
-		
-	# ~ Distribution des accidenté(e)s par conditions atmosphériques
-	
-	def distribution_des_accidenté_e_s_par_conditions_atmosphériques():
-		fig, ax = plt.subplots(figsize=(10,5))
-		sns.countplot(x="atm",data=df_[annee])
-		plt.xticks([0,1,2,3,4,5,6,7,8],['Normale',
-										'Pluie légère',
-										'Pluie forte',
-										'Neige - grêle',
-										'Brouillard - fumée',
-										'Vent fort - tempête',
-										'Temps éblouissant',
-										'Temps couvert',
-										'Autre'])
-		plt.xticks(rotation=20)
-		plt.xlabel("Conditions atmosphériques")
-		plt.ylabel('Nombre')
-		plt.title('Distribution des accidenté(e)s par conditions atmosphériques');
-		st.pyplot(fig)
-	if st.checkbox("Distribution des accidenté(e)s par conditions atmosphériques"):
-		distribution_des_accidenté_e_s_par_conditions_atmosphériques()
-		
-	# Distribution des accidentés en fonction des `conditions atmosphériques`
-	
-	def distribution_des_accidentés_en_fonction_des_conditions_atmosphériques():
-		labels_atm = ['Normale','Pluie légère','Pluie forte','Neige - grêle','Brouillard - fumée','Vent fort - tempête','Temps éblouissant','Temps couvert','Autre']
+	graphs = {
+	"tableau des régions avec le plus d'accidentés pour comparé avec le plus de blessés":Tableau_Des_Régions_Avec_Le_Plus_D_accidentés_Pour_Comparé_Avec_Le_Plus_De_Blessés,
+	"tableau des régions avec le plus de tués pour comparé avec le plus de blessés":Tableau_Des_Régions_Avec_Le_Plus_De_Tués_Pour_Comparé_Avec_Le_Plus_De_Blessés,
+	"tableau des départements avec le plus de tués":Tableau_Des_Départements_Avec_Le_Plus_De_Tués,
+	"tableau des régions avec le plus de blessés pour comparaison":Tableau_Des_Régions_Avec_Le_Plus_De_Blessés_Pour_Comparaison,
+	"distribution des accidentés par région/département":Distribution_Des_Accidentés_Par_Régiondépartement,
+	"tableau des nombre de tués par région et département":Tableau_Des_Nombre_De_Tués_Par_Région_Et_Département,
+	"palmarès des régions avec le plus et le moins d'accidentés":Palmarès_Des_Régions_Avec_Le_Plus_Et_Le_Moins_Daccidentés,
+	"palmarès des régions avec le plus et le moins de tués":Palmarès_Des_Régions_Avec_Le_Plus_Et_Le_Moins_De_Tués,
+	"palmarès des départements avec le plus d'accidents corporels":Palmarès_Des_Départements_Avec_Le_Plus_Daccidents_Corporels,
+	"palmarès des Départements avec le plus et le moins de Tués":Palmarès_Des_Départements_Avec_Le_Plus_Et_Le_Moins_De_Tués,
+	"distribution des accidenté(e)s par gravité de blessure":Distribution_Des_Accidentées_Par_Gravité_De_Blessure,
+	"carte intéractive des accidentés par gravité":Carte_Intéractive_Des_Accidentés_Par_Gravité,
+	"distribution des accidentés par mois":Distribution_Des_Accidentés_Par_Mois,
+	"distribution des accidentés par jour de la semaine":Distribution_Des_Accidentés_Par_Jour_De_La_Semaine,
+	"distribution par heure / minutes":Distribution_Par_Heure_Minutes,
+	"graphique par catégorie de véhicule":Graphique_Par_Catégorie_De_Véhicule,
+	"graphique par catégorie de route":Graphique_Par_Catégorie_De_Route,
+	"graphique par type de collision":Graphique_Par_Type_De_Collision,
+	"proportion masculin / féminin (accidentés)":Proportion_Masculin_Féminin_accidentés,
+	"proportion masculin/féminin ( tués )":Proportion_Masculinféminin_Tués_,
+	"proportion masculin/féminin ( tués par age )":Proportion_Masculinféminin_Tués_Par_Age_,
+	"graphique par sexe":Graphique_Par_Sexe,
+	"distribution des accidenté(e)s par gravité des blessures en fonction de l'âge":Distribution_Des_Accidentées_Par_Gravité_Des_Blessures_En_Fonction_De_Lâge,
+	"graphique par catégorie d'usager":Graphique_Par_Catégorie_Dusager,
+	"graphique par type de trajet":Graphique_Par_Type_De_Trajet,
+	}
 
-		fig, ax = plt.subplots(figsize=(20,15))
-		g = sns.countplot(x=df_[annee].atm, hue=df_[annee].region, data=df_[annee], palette='hls')
-		ax.xaxis.set_ticklabels(labels_atm, rotation=60)
-		plt.xlabel('Conditions atmosphériques')
-		plt.ylabel('Occurrence\n(échelle log)')
-		plt.title('Distribution des accidentés suivant la météo ('+str(annee)+')')
-		plt.yscale('log')
-		plt.legend(loc='upper center');
-		st.pyplot(fig)
-	if st.checkbox("Distribution des accidentés en fonction des `conditions atmosphériques (par région)"):
-		distribution_des_accidentés_en_fonction_des_conditions_atmosphériques()
 	
-	# ~ Distribution des accidentés en région Île-de-France suivant la météo
-	
-	def distribution_des_accidentés_en_région_île_de_france_suivant_la_météo():
-		labels_atm = ['Normale','Pluie légère','Pluie forte','Neige - grêle','Brouillard - fumée','Vent fort - tempête','Temps éblouissant','Temps couvert','Autre']
-		fig, ax = plt.subplots(figsize=(15,15))
-		df_[annee].mois = df_[annee].mois.replace({1:'Janvier',2:'Février',3:'Mars',
-								   4:'Avril',5:'Mai',6:'Juin',7:'Juillet',
-								   8:'Août',9:'Septembre',10:'Octobre',
-								   11:'Novembre',12:'Décembre'}
-								 )
-		sns.countplot(x=df_[annee].atm, hue=df_[annee].mois ,data=df_[annee][df_[annee].region=='Île-de-France'], palette='hls')
-		ax.xaxis.set_ticklabels(labels_atm, rotation=60)
-		plt.xlabel('Conditions atmosphériques')
-		plt.ylabel('Occurrence\n(échelle log)')
-		plt.title('Distribution des accidentés en région Île-de-France suivant la météo ('+str(annee)+')')
-		plt.yscale('log')
-		plt.legend(loc='best');
-		st.pyplot(fig)
-	if st.checkbox("Distribution des accidentés en région Île-de-France suivant la météo"):
-		distribution_des_accidentés_en_région_île_de_france_suivant_la_météo()
-	
-	# ~ Distribution des accidentés en région Auvergne-Rhône-Alpes suivant la météo
-	
-	def distribution_des_accidentés_en_région_auvergne_rhône_alpes_suivant_la_météo():
-		labels_atm = ['Normale','Pluie légère','Pluie forte','Neige - grêle','Brouillard - fumée','Vent fort - tempête','Temps éblouissant','Temps couvert','Autre']
-		fig, ax = plt.subplots(figsize=(15,15))
-		sns.countplot(x=df_[annee].atm, hue=df_[annee].mois,data=df_[annee][df_[annee].region=='Auvergne-Rhône-Alpes'], palette='hls')
-		ax.xaxis.set_ticklabels(labels_atm, rotation=60)
-		plt.xlabel('Conditions atmosphériques')
-		plt.ylabel('Occurrence\n(échelle log)')
-		plt.title('Distribution des accidentés en région Auvergne-Rhône-Alpes suivant la météo ('+str(annee)+')')
-		plt.yscale('log')
-		plt.legend(loc='best');
-		st.pyplot(fig)
-	if st.checkbox("Distribution des accidentés en région Auvergne-Rhône-Alpes suivant la météo"):
-		distribution_des_accidentés_en_région_auvergne_rhône_alpes_suivant_la_météo()
-	
-
-elif nav == '4. Modélisation':
-	"""
-	## 4. Modélisation
-	---
-	
-	
-	
-	En complément des analyses réalisées grâce aux _visualisations de données_, nous avons voulu réaliser du __Machine Learning__ afin de voir si on pouvait __prédire la gravité__ d’un _accident corporel_ en France.
-
-	### Données
-	
-	Les données utilisées sont celles fournies par le Ministère de l’Intérieur, moins `19 variables` que nous avons jugées inutiles ou redondantes. Nous avons enlevé toutes les variables de localisation géographiques (hormis  le code  INSEE de lacommune), ainsi que les informations temporelles et les numéros d’accident et de véhicule. 
-	
-	En voici la liste exhaustive : `dep`, `v2`, `v1`, `gps`, `pr1`, `pr`, `adr`, `voie`, `long`, `lat`, `Num_Acc`, `num_veh`, `an`, `mois`, `jour`, `hrmn`, `departement`, `region`, `an_nais`.
-	
-	L’étendue des données porte toujours sur _les années 2005 à 2017 inclues_.
-	
-	La gestion des `NaN` pour les variables quantitatives, suit le choix de l’ensemble du projet, soit l’utilisation du `mode`.
-	
-	Concernant les variables quantitatives, les observations sont supprimées.
-
-	### Tests et améliorations du Modèle de Machine Learning
-	
-	Après plusieurs essais, le choix a été fait de ne pas réaliser les modélisations sur tout le dataset de ML, mais après une diminution du dataset par regroupement (`groupby`) sur le numéro d'accident (`Num_Acc`), en ne conservant que la gravité (`grav`) la plus élevée (`max()`) lors de chaque accident.
-	
-	Ce choix nous a semblé judicieux pour plusieurs raisons :
-	
-	* donner de meilleures prédictions,
-	* réduire le temps de calcul,
-	* correspondre le mieux à une logique fonctionnelle (par exemple d’assureur), qui pourrait être notre client sur ce projet.
-	
-	Par contre, il aura une conséquence : la gravité la moins élevée (modalité '1' = 'indemne') n’est que très peu observée. De fait, elle sera absente du jeu de test et donc des résultats.
-	On peut argumenter notre choix dans ce sens, car on s'intéresse généralement aux risques d'accidents corporels de la route (pas 'indemne')
-	
-	### Données utilisées
-	
-	Le jeu de données utilisé pour les prédictions de Machine Learning comprend donc `1 100 476 observations` et `33 variables explicatives` potentielles.
-
-	### Choix des modèles
-	
-	Dans un but d’interprétabilité des résultats et de test de robustesse, nous avons opté dans un premier temps pour l’arbre de décision [DecisionTree](https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html#sklearn.tree.DecisionTreeClassifier) de la bibliothèque `Sklearn`,
-	et dans un second temps, pour la forêt d’arbres aléatoires [RandomForest](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html), toujours dela bibliothèque `Sklearn`.
-	"""
-	if st.checkbox('DecisionTree'):
-		"""
-		#### Résultats avec `DecisionTree`
-
-
-		##### Hyperparamètres utilisés
+	# sélection et affichage des graphiques par mot-clés
+	for key,value in graphs.items():
+		for word in search.split():
+			if word in key:
+				if st.checkbox(key):
+					value()
 		
-		Après différents tests de recherche des meilleurs hyperparamètres via la fonction `GridSearchCV`, il s’est avéré que les meilleurs étaient : `{'criterion': 'gini', 'max_depth': 14}`.
-
-		##### Taux de prédiction
-		Le taux de réussite de prédiction du modèle sur le jeu d'entraînement s'élève à 73,03%.
-		Le taux de réussite de prédiction du modèle sur le jeu de test, c’est-à-dire en condition réelle d’utilisation, s'élève à 70,52%.
-
-		##### Rapport d’évaluation
-		
-		Le rapport d’évaluation du modèle sur l’échantillon de test est le suivant :
-		
-		"""
-		st.image('PySecuRoute-DecisionTree-01-Rapport-evaluation.png')
-		"""
-		
-		La moyenne montre des scores satisfaisants, avec un recall légèrement supérieur au f1.
-
-		##### Matrice de confusion (heatmap et tableau)
-		
-		Dans le détail, la matrice de confusion représentée visuellement ci-dessous par un heatmap montre son meilleur taux de prédiction des accidents corporels sur les cas les plus graves (modalité '4'), alors que les autres prédictions présentent un nombre élevé de faux-positifs, et encore plus de faux-négatifs, créés par le modèle.
-		"""
-		st.image('PySecuRoute-DecisionTree-02-Matrice-confusion-heatmap.png')
-		"""
-		En chiffres, cela donne le tableau ci-dessous. Les effectifs visualisés de cette façon sont plus parlants. En outre, il nous permet de calculer que pour la modalité '3' par exemple, le pourcentage de faux-positifs s’élève à 58,7%, le pourcentage de faux-négatifs est de 0,6%, soit un taux de correctement prédis de 40,7%. Des résultats qui étaient déjà présents dans le rapport d’évaluation, respectivement sous les dénominations 'pre' mis pour precision, 'geo' et 'rec' pour recall.
-		"""
-		st.image('PySecuRoute-DecisionTree-03-Matrice-confusion-tableau.png')
-		"""
-		##### Top 10 des variables explicatives
-		
-		Un autre résultat est le top 10 des variables explicatives déterminé par notre modèle de `DecisionTree`:
-		"""
-		st.image('PySecuRoute-DecisionTree-04-Top10-Importance-variables-explicatives-tableau.png')
-		"""
-		* Il se caractérise par la prévalence de la catégorie de la route (`catr`), 
-		* suivi de près par le code INSEE de la commune (`com`), 
-		* puis par l’usage ou non de certains équipements de sécurité (`secu`),
-		* puis le nombre total de voies de circulation (`nbv`),
-		* et enfin par le type de collision (`col`) pour le __top5__.
-		
-		A elles cinq, ces variables expliquent __55,5%__ de la prédiction de notre modèle.
-		
-		#### Conclusions et pistes d’améliorations avec `DecisionTree`
-		La modélisation avec DecisionTree se révèle acceptable, mais présente de nombreuses limites en termes de robustesse. La plus importante d’entre-elles est le biais de prédiction vers les accidents corporels les plus graves.
-		Les pistes d’améliorations avec ce modèle de Machine Learning serait :
-		* dans le jeu de données, de supprimer les modalités non prédites, soit la modalité la moins grave : '1',
-		* réaliser une stratification en fonction des modalités présentes au moment de créer les jeux de données d’entraînement et de test. 
-		* choisir un modèle de Machine Learning plus adapté au type qualitatif de notre jeu de données et à son nombre élevé d’observations (largement supérieur au seuil des 100k observations), comme [SGDClassifier](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.SGDClassifier.html) par exemple ou,
-		* tester un modèle de l'arbre de décision dans une bibliothèque plus adaptée au Big Data telle que [PySpark](https://spark.apache.org/docs/latest//api/python/reference/api/pyspark.mllib.tree.DecisionTree.html)  
-
-		"""
-	
-elif nav == '5. Conclusion':
-	"""
-		## 5. Conclusion
-		
-		TODO...
-	"""
