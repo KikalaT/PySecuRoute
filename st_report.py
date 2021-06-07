@@ -38,7 +38,7 @@ if nav == '1. Présentation':
 	---
 	
 	### Présentation du projet
-
+	
 	Les accidents corporels sont courants et les répertorier permet de les étudier afin d’identifier
 	les différents cas qui ont impliqué des blessures plus ou moins graves. Prédire la gravité
 	d’un accident en fonction de ses différentes caractéristiques peut être utile pour proposer
@@ -95,7 +95,10 @@ if nav == '1. Présentation':
 
 	Nos réunions hebdomadaires avec Maxime de DataScientest, et ses conseils pertinents, ont permis d'aller à l'essentiel et d'éviter de nous égarer facilement vu le vaste sujet étudié, dans le temps restreint rythmé par les certifications hebdomadaires et obligatoires de cette riche formation.
 
-		
+	### Pourquoi PySecuRoute ?
+	
+	* Pour __Py__thon, langage ubiquitaire en tant que Data Analyst, et plus généralement en Data Science.
+	* Notre sensibilité commune sur la __Sécu__rité __Rout__ière
 	"""
 
 elif nav == '2. Exploration':
