@@ -685,7 +685,7 @@ elif nav == '3. Analyse':
 		plt.title("Distribution des accidenté(e)s par gravité des blessures en fonction du type de collision");
 		st.pyplot(fig)
 
-	## proportion masculin / féminin (accidentés)
+	## proportion masculin / féminin (accidentés) (sexe)
 	def Proportion_Masculin_Féminin_accidentés():
 		fig, ax = plt.subplots(figsize=(5,5))
 		sns.countplot(x="sexe",data=df)
@@ -695,7 +695,7 @@ elif nav == '3. Analyse':
 		plt.title('Distribution des accidentés par sexe');
 		st.pyplot(fig)
 
-	## proportion masculin/féminin ( tués )
+	## proportion masculin/féminin ( tués ) (sexe)
 	def Proportion_Masculinféminin_Tués_():
 		fig, ax = plt.subplots(figsize=(5,5))
 		sns.countplot(x="sexe",data=df_tues)
@@ -795,9 +795,9 @@ elif nav == '3. Analyse':
 	"graphique par catégorie de véhicule":Graphique_Par_Catégorie_De_Véhicule,
 	"graphique par catégorie de route":Graphique_Par_Catégorie_De_Route,
 	"graphique par type de collision":Graphique_Par_Type_De_Collision,
-	"proportion masculin / féminin (accidentés)":Proportion_Masculin_Féminin_accidentés,
-	"proportion masculin/féminin ( tués )":Proportion_Masculinféminin_Tués_,
-	"proportion masculin/féminin ( tués par âge )":Proportion_Masculinféminin_Tués_Par_Age_,
+	"proportion masculin / féminin (accidentés) ( sexe )":Proportion_Masculin_Féminin_accidentés,
+	"proportion masculin/féminin ( tués ) ( sexe )":Proportion_Masculinféminin_Tués_,
+	"proportion masculin/féminin ( tués par âge ) ( sexe )":Proportion_Masculinféminin_Tués_Par_Age_,
 	"graphique par sexe":Graphique_Par_Sexe,
 	"distribution des accidenté(e)s par gravité des blessures en fonction de l'âge":Distribution_Des_Accidentées_Par_Gravité_Des_Blessures_En_Fonction_De_Lâge,
 	"graphique par catégorie d'usager":Graphique_Par_Catégorie_Dusager,
@@ -816,6 +816,72 @@ elif nav == '4. Modélisation':
 	"""
 	TODO
 	"""
+	import pickle
+ 
+	# chargement du modèle entraîné via pickle
+	classifier_pickle = pickle.load(open('classifier-pickle.pkl','rb'))		#fichier pkl dispo dans le dossier de ce fichier py !!
+
+	@st.cache()
+ 	# Fonction qui réalisera la prédiction en utilisant les données entrées par l'utilisateur
+	def prediction(Gender, Married, ApplicantIncome, LoanAmount, Credit_History):   
+	 
+		# Pre-processing des entrées de l'utilisateur    
+		if Gender == "Masculin":
+			Gender = 0
+		else:
+			Gender = 1
+	 
+		if Married == "Non marié":
+			Married = 0
+		else:
+			Married = 1
+	 
+		if Credit_History == "Non, pas d'autre crédit en cours":
+			Credit_History = 0
+		else:
+			Credit_History = 1  
+	 
+		LoanAmount = LoanAmount / 1000
+	 
+		# Réalisation de la prediction personnalisée 
+		prediction = classifier_pickle.predict( 
+			[[Gender, Married, ApplicantIncome, LoanAmount, Credit_History]])
+		 
+		if prediction == 0:
+			pred = 'rejeté'
+		else:
+			pred = 'approuvé'
+		return pred
+		  
+
+	#Fonction de création de la page web Streamlit
+	def main():       
+		# Elements front end 
+		html_temp = """ 
+		<div style="background-color:#76D7C4; padding:13px"> 
+		<h1 style="color:black; text-align:center">Simulateur de crédit via une prédiction de Machine Learning</h1>
+		<p>Afin de voir le résultat en bas de page, choisissez vos caractéristiques&#160;:</p>
+		</div> 
+		"""
+		  
+		# Afficher le front end
+		st.markdown(html_temp, unsafe_allow_html = True)
+		  
+		# Champs personnalisés par l'utilisateur. Ils sont obligatoires pour faire une prédiction
+		Gender = st.selectbox('Genre&#160;:',("Masculin","Féminin"))
+		Married = st.selectbox('Statut marital&#160;:',("Non marié","Marié")) 
+		ApplicantIncome = st.number_input("Revenu mensuel du demandeur&#160;:") 
+		LoanAmount = st.number_input("Montant total du prêt demandé&#160;:")
+		Credit_History = st.selectbox('Avez-vous un crédit actuellement en cours&#160;?',("Oui, autre crédit en cours","Non, pas d'autre crédit en cours"))
+		result =""
+		  
+		# Quand le bouton 'Prédire' est cliqué, réaliser la prédiction et afficher le résultat 
+		if st.button("Prédire"): 
+			result = prediction(Gender, Married, ApplicantIncome, LoanAmount, Credit_History) 
+			st.success('Votre crédit est {}'.format(result))
+			print(LoanAmount)
+			
+		main()
 
 elif nav == '5. Conclusion':
 	"""
