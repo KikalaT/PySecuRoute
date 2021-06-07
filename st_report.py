@@ -12,6 +12,9 @@ from bokeh.transform import factor_cmap
 from bokeh.models.tools import WheelZoomTool
 from bokeh.models import ColumnDataSource
 
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier 
+
 import streamlit as st
 
 # page configuration
