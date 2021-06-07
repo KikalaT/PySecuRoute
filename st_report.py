@@ -23,7 +23,7 @@ layout="wide",
 # sidebar navigator
 st.sidebar.header('PySecuRoute v1.0')
 st.sidebar.title('Sommaire')
-nav = st.sidebar.radio('',['1. Présentation','2. Exploration','3. Analyse et Visualisation'])
+nav = st.sidebar.radio('',['1. Présentation','2. Exploration','3. Analyse','4. Modélisation','5. Conclusion'])
 
 """
 # PySecuRoute v1.0
@@ -34,15 +34,17 @@ nav = st.sidebar.radio('',['1. Présentation','2. Exploration','3. Analyse et Vi
 
 if nav == '1. Présentation':
 	"""
-	## 1. Présentation du projet
+	## 1. Présentation
 	---
 	
-	### Introduction
-	
+	### Présentation du projet
+
 	Les accidents corporels sont courants et les répertorier permet de les étudier afin d’identifier
 	les différents cas qui ont impliqué des blessures plus ou moins graves. Prédire la gravité
 	d’un accident en fonction de ses différentes caractéristiques peut être utile pour proposer
 	une solution qui a comme but de réduire la fréquence des accidents graves.
+
+	**Données**
 
 	Plusieurs jeux de données répertorient l’intégralité des accidents corporels de la circulation
 	intervenus durant une année précise en France métropolitaine et dans les DOM-TOM. Ces
@@ -52,21 +54,48 @@ if nav == '1. Présentation':
 
 	Nous avons choisi d'exploiter les données dont les sources sont téléchargeables au lien suivant :
 
-	[source](https://www.data.gouv.fr/fr/datasets/bases-de-donnees-annuelles-des-accidents-corporels-de-la-circulation-routiere-annees-de-2005-a-2019/#_)
+	[https://www.data.gouv.fr/fr/datasets/bases-de-donnees-annuelles-des-accidents-corporels-de-la-circulation-routiere-annees-de-2005-a-2019](https://www.data.gouv.fr/fr/datasets/bases-de-donnees-annuelles-des-accidents-corporels-de-la-circulation-routiere-annees-de-2005-a-2019/)
 
-	### Objectif du projet
-	
-	Avec les nombreuses données mises à notre disposition, notre objectif est de Prédire la gravité d’un accident en fonction de ses différentes caractéristiques.
+	### Organisation et répartition des tâches
 
-	Nous allons essayer de faire ressortir les éléments majeurs qui nous permettront de proposer des axes d'améliorations en terme de Sécurité Routière.
+	Nous avons choisi ce projet pour la __volumétrie__ et la __variété__ des informations mises à disposition sur un sujet concret qui impacte notre vie au quotidien :
 
-	Le but de cette étude est de trouver des pistes pour réduire la fréquence et la gravité des accidents corporels.
+	les déplacements sur les routes françaises et la sécurité routière qui en découle.
+	Pourtant, nous ne sommes probablement pas les personnes les plus impactées par le trafic routier.
 
-	#### Pourquoi __PySécuRoute__ ?
+	Venant de _Caen_, _Le Mans_, _Roanne_ et même _Saint-Denis de La Réunion_, le trafic routier des grandes agglomérations et les accidents récurrents ne sont pas notre lot de désagrément quotidien.
 
-	Pour "__Py__thon", notre nouveau langage commun de `Data Analyst` avec ses nombreux et puissants outils
-	Pour Notre sensibilité commune sur la __Sécu__rité __Rout__ière
-	
+	Mais comme le sujet essentiel de ce projet Data est axé sur la __gravité des blessures corporels__ et la mortalité des accidentés de la route, nous verrons aussi que les spécificités géographiques peuvent donner des informations parlantes et exploitables pour un assureur ou un organisme travaillant dans le large périmètre de la sécurité routière.
+
+	**Répartition des tâches** :
+
+	La répartition des tâches dans l'équipe s'est faite naturellement par affinité sur les sujets et sur les compétences de chacun.
+
+	Notre équipe est composée de profils professionnels aux parcours complètement différents.
+
+	Ces différences de profil et de personnalité ont nourri la richesse des échanges et permis de trouver une vraie complémentarité dans la répartition des tâches :
+
+	__Kikala__: Enseignant, Chercheur, formé au renseignement d'intéret économique, adepte du Zen de Python depuis quelques années, s'est orienté naturellement sur l'exploitation, la mise en forme des données, le data processing.
+
+	Son expérience en Python nous a permis de débuter rapidement le projet et de transmettre ses actuces.
+
+	__Christophe__: Chercheur en Archéologie et Géographie, a pu retrouver facilement ses repères en fouillant la documentation et les hyperparamètres d'un nombre important de modèles de Machine Learning.
+
+	Passionné d'informatique et de programmation web, nous avons pu profiter de ses talents de développeur, de facilitateur de mise à disposition d'environnement cloud pour exécuter les traitements lourds sur un volume important de données.
+
+	__Hervé__: Analyste fonctionnel, Consultant en Assistance en Maitrise d'Ouvrage, a pu continuer de questionner, analyser, détecter les écarts en s'orientant vers la production de graphiques, en requétant et contrôlant l'intégrité des données avant le traitement de Machine Learning.
+
+	__Pascal__ : sa formation en Gestion et Commerce, son attrait pour les tableaux et les statistiques l'ont orienté vers la partie DataVizualiation avec de nombreux graphiques à étudier en liaison avec les résultats du Machine Learning.
+
+	Les parties rédaction, relecture et critique ont été équitablement partagée dans l'équipe.
+
+	### Avancement et suivi du projet
+
+	A l'aide de _Slack_, _codeshare.io_ et des réunions _Zoom_, nous avons pu communiquer régulièrement sur l'avancé du projet et sur nos tâches respectives.
+
+	Nos réunions hebdomadaires avec Maxime de DataScientest, et ses conseils pertinents, ont permis d'aller à l'essentiel et d'éviter de nous égarer facilement vu le vaste sujet étudié, dans le temps restreint rythmé par les certifications hebdomadaires et obligatoires de cette riche formation.
+
+		
 	"""
 
 elif nav == '2. Exploration':
@@ -108,7 +137,7 @@ elif nav == '2. Exploration':
 		### Exploitation des données
 		---
 	
-		Ayant relevé une incomptaibilité entre les datasets antérieurs et postérieurs à 2018, nous avons choisi de fusionner dans un DataFrame l'ensemble des bases de données de 2005 à 2017
+		Ayant relevé une incompatibilité entre les datasets antérieurs et postérieurs à 2018, nous avons choisi de fusionner dans un DataFrame l'ensemble des bases de données de 2005 à 2017
 
 		"""
 		
@@ -213,9 +242,88 @@ elif nav == '2. Exploration':
 		* Création de _4 dataframes_ correspondants aux chargements des _4 fichiers csv_ de l'année.
 		* Création d'un _dataframe global_ de l'année résultat des jointures des 4 dataframes de l'année
 		* _Concaténation_ de l'ensemble des dataframes globaux pour créer un dataframe final de notre période 2005 à 2017
-		"""
+		
+		_Ajout des colonnes 'département' et 'région'_
+
+		Nous avons fait le choix de pouvoir localiser les accidents. Pour cela, nous utiliserons 2 dictionnaires Python téléchargeables [ici](https://gist.github.com/mlorant/b4d7bb6f96c47776c8082cf7af44ad95)
+
+		Ces deux dictionnaires listent les régions et départements français. Dans notre dataframe, le département est renseigné dans la colonne __'dep'__.
+
+		Création des colonnes :
+		* 'departement'
+		* 'region'
+		"""	
 	
-elif nav == '3. Analyse et Visualisation':
+	if st.checkbox('Data cleaning'):
+		"""
+
+		Nous avons effectué un _data cleaning_ des données avec notamment :
+		* une gestion des NaN
+		* remplacement des NaN par le mode le cas échéant.
+		"""
+		
+		"""
+		```
+		nan_mode_cols = ['place','secu','lartpc','larrout','env1','infra','situ','vosp','nbv','plan','prof',
+						 'surf','circ','actp','locp','etatp','an_nais','obsm','obs','trajet',
+						 'manv','choc','senc','atm']
+
+		for col in nan_mode_cols:
+			df[col] = df[col].fillna(df[col].mode()[0])
+
+		```
+		"""
+		"""
+		* une conversion de la majorité des colonnes grâce à la fonction pd.to_numeric(...
+
+		Exemple de fonction créée pour le projet et permettant d'afficher la répartition des NaN's :
+
+		"""
+		"""
+		```
+		def show_nan_rep(dataframe):
+			missing_count = dataframe.isnull().sum()  the count of missing values
+			value_count = dataframe.isnull().count()  the count of all values 
+			missing_percentage = round(missing_count / value_count * 100,2)  the percentage of missing values
+			missing_df = pd.DataFrame({'nbre': missing_count, '%': missing_percentage})  create a dataframe
+			print("Champs vides :")
+			print(missing_df.sort_values(by='nbre', ascending=False))
+			plt.figure(figsize=(8,8))
+			missing_df['%'].sort_values(ascending=False)[:15].plot.pie(autopct="%.1f%%")
+			plt.title('Répartition des données manquantes par colonne');
+		```
+		"""
+		"""
+		Exemple de fonction créée pour sonder les modalités de chaque colonne :
+		"""
+		"""
+		```
+		for i in df.columns[1:]:
+			x = df[i].sort_values().unique()
+			print('Pour la colonne ',i,', les valeurs sont :',x)
+		```
+		"""
+		"""
+
+		On fait le choix de supprimer les colonnes `v2`, `v1`, `gps`, `pr1`, `pr`, `adr` et `voie` qui de part le caractère erratique de leurs modalités n'apporteront pas de valeur ajoutée à notre étude.
+
+		On conserve les colonnes lat et long pour l'instant.
+		"""
+
+	if st.checkbox('Conclusions et export'):
+		"""	
+		Nous ne proposons pas le code associé dans le présent rapport, vu que le CSV est disponible sur un site internet personnel, à cause de sa grande taille (444Mo) ne pouvant pas être hébergé sur GitHub et la durée potentielle de réalisation.
+
+		[Le lien du CSV global 2005-2017](https://christophe-wardius.fr/projets/pysecuroute/dataset_v3/df_global_v3.csv)
+
+		`df.to_csv('...`
+		
+		Nous avons fait le choix d'héberger le fichier global 2005-2017 sur le site personnel de Christophe W., car le CSV global a une taille de `444Mo` et GitHub ne permet pas de stocker un tel fichier. 
+
+		En outre, nous avons décidé de proposer un CSV par année pour les besoins de la visualisation de données. Ceux-ci sont disponibles directement sur le GitHub du projet au sein du dossier 'dataset'.
+		"""
+
+elif nav == '3. Analyse':
 	"""
 		## 3. Analyse et Visualisation des données
 	"""
@@ -280,9 +388,11 @@ elif nav == '3. Analyse et Visualisation':
 	# recherche par mot-clés
 	"""
 	##### Recherche de visualisations par mot-clés (en minuscule, séparé par des espaces)
-	###### exemples de mot-clés : `carte` `région` `département` `gravité` `mois` `jour` `heure` `véhicule` `route` `collision` `sexe`
 	"""
 	search = st.text_input('')
+	"""
+	###### exemples de mot-clés : `carte` `région` `département` `gravité` `mois` `jour` `heure` `véhicule` `route` `collision` `sexe`
+	"""
 
 	# graphiques
 
@@ -698,5 +808,13 @@ elif nav == '3. Analyse et Visualisation':
 			if word in key:
 				if st.checkbox(key):
 					value()
-		
-	st.write(df.astype('object').head(10))
+
+elif nav == '4. Modélisation':
+	"""
+	TODO
+	"""
+
+elif nav == '5. Conclusion':
+	"""
+	TODO
+	"""
