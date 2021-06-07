@@ -221,10 +221,13 @@ elif nav == '3. Analyse et Visualisation':
 	"""
 	
 	"""
-	(Nous avons fait le choix de __filtrer__ les données de visualisation __par année__ compte tenu des limitations de la plateforme de partage __Streamlit Share__)
+	###### Afin d'optimiser le temps de chargement et l'affichage, nous avons fait le choix de __filtrer__ les données de visualisation __par année__.
+	---	
 	"""
-	
-	annee = st.selectbox("Sélectionnez une année d'étude (de 2005 à 2017)", np.arange(2005,2018,1))
+	"""
+	##### Sélectionnez une année d'étude (de 2005 à 2017)
+	"""
+	annee = st.selectbox("", np.arange(2005,2018,1))
 
 	@st.cache(suppress_st_warning=True,allow_output_mutation=True,max_entries=None,ttl=60*3)
 	def preprocess():
@@ -260,15 +263,14 @@ elif nav == '3. Analyse et Visualisation':
 	
 	# chargement des dataframes
 	df = preprocess()
-	df['age']=(df.an+2000)-df.an_nais
+	
+	df['date']= pd.to_datetime((df.an*10000+df.mois*100+df.jour).apply(str),format='%Y%m%d', exact=False, errors='coerce')
+	df['day']= df.date.dt.day_name()
+	df['day']= pd.Categorical(df['day'],['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],ordered=True)
+	df['age']= df.an-df.an_nais
 	
 	df_non_indemnes = df[df['grav']!=1]
 	df_tues = df[df['grav']==2]
-	
-	df_global = df
-	df_global['date']=pd.to_datetime((df_global.an*10000+df_global.mois*100+df_global.jour).apply(str),format='%Y%m%d', exact=False, errors='coerce')
-	df_global['day']=df_global.date.dt.day_name()
-	df_global['day']=pd.Categorical(df_global['day'],['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],ordered=True)
 	
 	print('(done) : preprocessing completed.')
 	
@@ -276,8 +278,11 @@ elif nav == '3. Analyse et Visualisation':
 	st.sidebar.markdown("### Analyses sur l'année : "+str(annee))
 	
 	# recherche par mot-clés
-	search = st.text_input('Recherche de visualisations par mot-clés\n (en minuscule, séparé par des espaces)')
-	
+	"""
+	##### Recherche de visualisations par mot-clés (en minuscule, séparé par des espaces)
+	###### exemples de mot-clés : `carte` `région` `département` `gravité` `mois` `jour` `heure` `véhicule` `route` `collision` `sexe`
+	"""
+	search = st.text_input('')
 
 	# graphiques
 
@@ -378,7 +383,7 @@ elif nav == '3. Analyse et Visualisation':
 	## distribution des accidenté(e)s par gravité de blessure
 	def Distribution_Des_Accidentées_Par_Gravité_De_Blessure():
 		fig, ax = plt.subplots(figsize=(10,5))
-		sns.countplot(x="grav",data=df_global)
+		sns.countplot(x="grav",data=df)
 		plt.xticks([0,1,2,3],['Indemne',
 							  'Tué',
 							  'Blessé hospitalisé',
@@ -433,7 +438,7 @@ elif nav == '3. Analyse et Visualisation':
 	## distribution des accidentés par mois
 	def Distribution_Des_Accidentés_Par_Mois():
 		fig, ax = plt.subplots(figsize=(10,10))
-		sns.countplot(x="grav", hue="mois", data=df_global);
+		sns.countplot(x="grav", hue="mois", data=df);
 		plt.legend(labels=['Janvier',
 						   'Février',
 						   'Mars',
@@ -458,7 +463,7 @@ elif nav == '3. Analyse et Visualisation':
 	## distribution des accidentés par jour de la semaine
 	def Distribution_Des_Accidentés_Par_Jour_De_La_Semaine():
 		fig, ax = plt.subplots(figsize=(10,5))
-		sns.countplot(x="grav", hue="day", data=df_global);
+		sns.countplot(x="grav", hue="day", data=df);
 		plt.legend(labels=['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'])
 		plt.xticks([0,1,2,3],['Indemne',
 							  'Tué',
@@ -472,7 +477,7 @@ elif nav == '3. Analyse et Visualisation':
 	## distribution par heure / minutes
 	def Distribution_Par_Heure_Minutes():
 		fig, ax = plt.subplots(figsize=(11,5))
-		sns.kdeplot(x='hrmn',hue='grav',multiple="stack",data=df_global)
+		sns.kdeplot(x='hrmn',hue='grav',multiple="stack",data=df)
 		plt.legend(labels=['Blessé léger','Blessé hospitalisé','Tué','Indemne'])
 		plt.xticks([0,500,1000,1500,2000],['0:00','5:00','10:00','15:00','20:00'])
 		plt.xlim(right=2500)
@@ -484,7 +489,7 @@ elif nav == '3. Analyse et Visualisation':
 	## graphique par catégorie de véhicule
 	def Graphique_Par_Catégorie_De_Véhicule():
 		fig, ax = plt.subplots(figsize=(15,15))
-		sns.countplot(x="grav", hue="catv", data=df_global);
+		sns.countplot(x="grav", hue="catv", data=df);
 		plt.legend(labels=['01 - Bicyclette',
 						   '02 - Cyclomoteur <50cm3',
 						   '03 - Voiturette (Quadricycle à moteur carrossé)',
@@ -530,7 +535,7 @@ elif nav == '3. Analyse et Visualisation':
 	## graphique par catégorie de route
 	def Graphique_Par_Catégorie_De_Route():
 		fig, ax = plt.subplots(figsize=(10,5))
-		sns.countplot(x="grav", hue="catr", data=df_global);
+		sns.countplot(x="grav", hue="catr", data=df);
 		plt.legend(labels=['1 - Autoroute',
 						   '2 - Route nationale',
 						   '3 - Route Départementale',
@@ -550,7 +555,7 @@ elif nav == '3. Analyse et Visualisation':
 	## graphique par type de collision
 	def Graphique_Par_Type_De_Collision():
 		fig, ax = plt.subplots(figsize=(10,5))
-		sns.countplot(x="grav", hue="col", data=df_global);
+		sns.countplot(x="grav", hue="col", data=df);
 		plt.legend(labels=['Deux véhicules - frontale',
 						   'Deux véhicules - par l’arrière',
 						   'Deux véhicules - par le coté',
@@ -587,7 +592,7 @@ elif nav == '3. Analyse et Visualisation':
 		plt.title("Distribution des Tué(e)s par sexe");
 		st.pyplot(fig)
 
-	## proportion masculin/féminin ( tués par age )
+	## proportion masculin/féminin ( tués par âge )
 	def Proportion_Masculinféminin_Tués_Par_Age_():
 		g = sns.FacetGrid(df_tues, col='sexe')
 		g.map(plt.hist, 'age');
@@ -596,7 +601,7 @@ elif nav == '3. Analyse et Visualisation':
 	## graphique par sexe
 	def Graphique_Par_Sexe():
 		fig, ax = plt.subplots(figsize=(10,5))
-		sns.countplot(x="grav", hue="sexe", data=df_global);
+		sns.countplot(x="grav", hue="sexe", data=df);
 		plt.legend(labels=['M','F'])
 		plt.xticks([0,1,2,3],['Indemne',
 							  'Tué',
@@ -610,7 +615,7 @@ elif nav == '3. Analyse et Visualisation':
 	## distribution des accidenté(e)s par gravité des blessures en fonction de l'âge
 	def Distribution_Des_Accidentées_Par_Gravité_Des_Blessures_En_Fonction_De_Lâge():
 		fig, ax = plt.subplots(figsize=(11,5))
-		sns.kdeplot(x='age',hue='grav',multiple="stack",data=df_global)
+		sns.kdeplot(x='age',hue='grav',multiple="stack",data=df)
 		plt.legend(labels=['Blessé léger','Blessé hospitalisé','Tué','Indemne'])
 		plt.xlim(right=110)
 		plt.xlabel('Age')
@@ -621,7 +626,7 @@ elif nav == '3. Analyse et Visualisation':
 	## graphique par catégorie d'usager
 	def Graphique_Par_Catégorie_Dusager():
 		fig, ax = plt.subplots(figsize=(10,5))
-		sns.countplot(x="grav", hue="catu", data=df_global);
+		sns.countplot(x="grav", hue="catu", data=df);
 		plt.legend(labels=['1 - Conducteur',
 						   '2 - Passager',
 						   '3 - Piéton',
@@ -638,7 +643,7 @@ elif nav == '3. Analyse et Visualisation':
 	## graphique par type de trajet
 	def Graphique_Par_Type_De_Trajet():
 		fig, ax = plt.subplots(figsize=(10,10))
-		sns.countplot(x="grav", hue="trajet", data=df_global);
+		sns.countplot(x="grav", hue="trajet", data=df);
 		plt.legend(labels=['Non renseigné',
 						   'Domicile – travail',
 						   'Domicile – école',
@@ -679,7 +684,7 @@ elif nav == '3. Analyse et Visualisation':
 	"graphique par type de collision":Graphique_Par_Type_De_Collision,
 	"proportion masculin / féminin (accidentés)":Proportion_Masculin_Féminin_accidentés,
 	"proportion masculin/féminin ( tués )":Proportion_Masculinféminin_Tués_,
-	"proportion masculin/féminin ( tués par age )":Proportion_Masculinféminin_Tués_Par_Age_,
+	"proportion masculin/féminin ( tués par âge )":Proportion_Masculinféminin_Tués_Par_Age_,
 	"graphique par sexe":Graphique_Par_Sexe,
 	"distribution des accidenté(e)s par gravité des blessures en fonction de l'âge":Distribution_Des_Accidentées_Par_Gravité_Des_Blessures_En_Fonction_De_Lâge,
 	"graphique par catégorie d'usager":Graphique_Par_Catégorie_Dusager,
@@ -694,3 +699,4 @@ elif nav == '3. Analyse et Visualisation':
 				if st.checkbox(key):
 					value()
 		
+	st.write(df.astype('object').head(10))
