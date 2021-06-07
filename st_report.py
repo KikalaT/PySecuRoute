@@ -16,6 +16,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier 
 
 import streamlit as st
+import pickle
 
 # page configuration
 st.set_page_config(
@@ -816,75 +817,331 @@ elif nav == '3. Analyse':
 					value()
 
 elif nav == '4. Modélisation':
-	"""
-	TODO
-	"""
-	import pickle
- 
-	# chargement du modèle entraîné via pickle
-	classifier_pickle = pickle.load(open('classifier-pickle.pkl','rb'))		#fichier pkl dispo dans le dossier de ce fichier py !!
-
-	@st.cache()
- 	# Fonction qui réalisera la prédiction en utilisant les données entrées par l'utilisateur
-	def prediction(Gender, Married, ApplicantIncome, LoanAmount, Credit_History):   
-	 
-		# Pre-processing des entrées de l'utilisateur    
-		if Gender == "Masculin":
-			Gender = 0
-		else:
-			Gender = 1
-	 
-		if Married == "Non marié":
-			Married = 0
-		else:
-			Married = 1
-	 
-		if Credit_History == "Non, pas d'autre crédit en cours":
-			Credit_History = 0
-		else:
-			Credit_History = 1  
-	 
-		LoanAmount = LoanAmount / 1000
-	 
-		# Réalisation de la prediction personnalisée 
-		prediction = classifier_pickle.predict( 
-			[[Gender, Married, ApplicantIncome, LoanAmount, Credit_History]])
-		 
-		if prediction == 0:
-			pred = 'rejeté'
-		else:
-			pred = 'approuvé'
-		return pred
-		  
-
-	#Fonction de création de la page web Streamlit
-	def main():       
-		# Elements front end 
-		html_temp = """ 
-		<div style="background-color:#76D7C4; padding:13px"> 
-		<h1 style="color:black; text-align:center">Simulateur de crédit via une prédiction de Machine Learning</h1>
-		<p>Afin de voir le résultat en bas de page, choisissez vos caractéristiques&#160;:</p>
-		</div> 
+	
+	if st.checkbox('Présentation du modèle'):
 		"""
-		  
-		# Afficher le front end
-		st.markdown(html_temp, unsafe_allow_html = True)
-		  
-		# Champs personnalisés par l'utilisateur. Ils sont obligatoires pour faire une prédiction
-		Gender = st.selectbox('Genre&#160;:',("Masculin","Féminin"))
-		Married = st.selectbox('Statut marital&#160;:',("Non marié","Marié")) 
-		ApplicantIncome = st.number_input("Revenu mensuel du demandeur&#160;:") 
-		LoanAmount = st.number_input("Montant total du prêt demandé&#160;:")
-		Credit_History = st.selectbox('Avez-vous un crédit actuellement en cours&#160;?',("Oui, autre crédit en cours","Non, pas d'autre crédit en cours"))
-		result =""
-		  
-		# Quand le bouton 'Prédire' est cliqué, réaliser la prédiction et afficher le résultat 
-		if st.button("Prédire"): 
-			result = prediction(Gender, Married, ApplicantIncome, LoanAmount, Credit_History) 
-			st.success('Votre crédit est {}'.format(result))
-			print(LoanAmount)
+		## Introduction
+		
+		Lors de l'étape de recherche des corrélations, on s'est rendu compte que les colonnes de numérotation des accidents (`'Num_Acc'`) et des véhicules (`'num_veh'`) étaient contre-productifs, tout comme les 4 colonnes formant les données temporelles des accidents (`'an', 'mois', 'jour'` et `'hrmn'`), ainsi que les 2 colonnes de localisation (`'departement'` et `'region'`). On a donc choisi de les supprimer, créant ainsi un DataFrame intitulé `'df_corr'`.
+		Pour cette étape, on conserve donc **2012004** lignes x **48** colonnes.
+		On observe une majorité d'absence de corrélation (en blanc). Malgré tout, de fortes corrélations positives sont visibles, en particulier entre le trio localisation du piéton ('locp'), action du piéton ('actp') et l'information de savoir si le piéton accidenté était seul ou non ('etatp'), ainsi qu'entre ces 3 variables et la catégorie d'usager ('catu'), mais également entre la catégorie de route ('catr') et la localisation en ou hors agglomération ('agg').
+		
+		A l'opposé, seule ressort particulièrement la relation négative entre le type de collision ('col') et l'obstacle mobile heurté ('obsm').
+		
+		En somme des relations devenues évidentes et bien connues sur lesquelles les autorités routières communiquent beaucoup depuis de nombreuses années.
+		
+		### Top des variables explicatives...
+		...de chaque colonne
+		Afin de mieux comprendre chaque variable explicative potentielle, il faut se pencher sur ses corrélations les plus fortes. Vu le nombre nettement plus élevé de corrélations positives par rapport à celles négatives, nous avons occultés ces dernières dans le rapport.
+		
+		Représenté sous forme de tableaux, le top 5 des corrélations de chacunes de nos 35 variables potentielles est trop peu interprétable :
+
+		On observe les relations entre le quatuor ('locp', 'actp', 'etatp' et 'catu') de tout à l'heure, mais on voit nettement mieux d'autres relations comme celle entre :
+		
+		la situation de l'accident ('situ') et l'obstacle fixe heurté ('obs'),
+		ou entre l'état de surface de la route ('surf') et les conditions atmosphériques ('atm'),
+		ou entre l'obstacle fixe heurté ('obs') avec le type de collision ('col') et la situation de l'accident ('situ'),
+		ou entre la place occupée dans le véhicule par l'usager au moment de l'accident ('place') et la catégorie de l'usager ('catu'),
+		ou enfin entre le sexe de l'usager ('sexe') et la catégorie de l'usager ('catu').
+		En conclusion des relations qui sont pour la plupart évidentes et ne donnent que très peu d'informations nouvelles concernant la causalité.
+		
+		Notre but étant de travailler sur la gravité des accidents corporels, nous allons nous pencher plus à même sur les variables explicatives qui ressortent grâce aux coefficients de Pearson, en particulier, les corrélations positives :
+		Les plus forts coefficients de corrélation sont obtenus par le quatuor de tête que nous observons régulièrement. Ici, c'est la catégorie de l'usager ('catu') qui domine, suivi de l'information permettant de savoir si le piéton accidenté était seul ou non ('etatp'), suivi de très près par l'action du piéton ('actp') et enfin, la localisation du piéton ('locp').
+		
+		Ensuite, l'existence et l'utilisation d'équipement de sécurité ('secu') font leur entrée, suivi par la catégorie du véhicule ('catv'), puis l'année de naissance de l'accidenté ('an_nais'), conforté par l'obstacle fixe heurté ('obs') et enfin le sexe de l'accidenté ('sexe').
+		
+		Pour résumer, la gravité d'un accident corporel semble se porter par qui est l'accidenté et ce qu'il faisait, suivi de l'usage ou non d'équipements de sécurité, le type de véhicule rencontré, l'âge de l'accidenté, le type d'obstacle fixe heurté le cas échéant, ainsi que son sexe.
+
+		# Machine Learning
+
+		En complément des analyses réalisées notamment grâce aux dataviz’, nous avons voulu réaliser du Machine Learning afin de voir si on pouvait prédire la gravité d’un accident corporel en France.
+
+		## Création du jeu de données
+		Les données utilisées sont celles fournies par le Ministère de l’Intérieur, moins 19 variables que nous avons jugées inutiles ou redondantes. Nous avons enlevé toutes les variables de localisation géographiques (hormis le code INSEE de la commune), ainsi que les informations temporelles et les numéros d’accident et de véhicule. En voici la liste exhaustive : 'dep', 'v2', 'v1', 'gps', 'pr1', 'pr', 'adr', 'voie', 'long', 'lat', 'Num_Acc', 'num_veh', 'an', 'mois', 'jour', 'hrmn', 'departement', 'region', 'an_nais'.
+		
+		L’étendue des données porte toujours sur les années 2005 à 2017 inclues.
+		
+		La gestion des NaN pour les variables quantitatives, suit le choix de l’ensemble du projet, soit l’utilisation du mode. Concernant les variables quantitatives, les observations sont supprimées.
+
+		## Réduction du jeu de données
+		Après plusieurs essais, le choix a été fait de ne pas réaliser les modélisations sur tout le dataset de Machine Learning, mais après une diminution de ce dataset par regroupement sur le numéro d'accident ('Num_Acc'), en ne conservant que la gravité ('grav') la plus élevée lors de chaque accident. Ce choix nous a semblé judicieux pour plusieurs raisons :
+		
+		* donner de meilleures prédictions,
+		* réduire le temps de calcul,
+		* correspondre le mieux à une logique d’assureur, qui pourrait être notre client ici.
+		
+		Par contre, il aura une conséquence : la gravité la moins élevée (modalité '1') n’est que très peu observée. De fait, elle sera absente du jeu de test et donc des résultats.
+		Nos itérations de Machine Learning se feront donc sur 1100476 lignes x 34 colonnes (variable cible incluse) quand nous utiliserons l'ensemble des données. Ce jeu de données se nomme 'df_ml_regroupe'.
+		
+		Comme il est important de ne pas fournir de NaN à un modèle de Machine Learning, nous préférons vérifier leur abscence :
+		Les différents essais réalisés par `GridSerachCV sur une partie de nos données nous ont amené, dans un but de robustesse et d’interprétabilité des résultats, vers le choix de la modélisation par l’arbre de décision (DecisionTree).
+		Malgré la réduction du dataset qui à créer 'df_ml_regroupe', les longs temps de calcul nous ont amené à échantillonner sur 20% pour ces GridSearchCV.
+		L'échantillonnage au hasard réalisé sur notre jeu de données a été porté sur 20%. Cela correspond à 220095 lignes x 34 colonnes (variable cible incluse). Ce jeu de données se nomme 'df_ml_reduit'.
+		Ainsi, notre jeu d'entraînement échantillonné porte sur 176076 lignes (sur 33 colonnes maintenant, comme la variable cible a été exclue) et le jeu de test associé, sur 44019 lignes.
+		Plusieurs itérations de GridSearchCV ont été réalisées. Nous vous présentons ci-dessous la dernière qui porte sur le critère d'analyse ('criterion') et la profondeur maximale ('max_depth') via l'arbre de décision :
+		La recherche du meilleur paramètre sur 20% du jeu de données nous oriente vers le critère 'gini', c'est le paramètre que nous utiliserons sur la totalité de notre dataset pour les prédictions via Machine Learning qui vont suivre.
+		
+		## Decision Tree
+		
+		Ici, le jeu d'entraînement porte sur 880380 lignes (sur 33 colonnes maintenant, comme la variable cible a été exclue) et le jeu de test associé, sur 220096 lignes.
+		Le taux de réussite de prédiction du modèle sur le jeu d'entraînement s'élève à 73,03%.
+		Il se caractérise par la prévalence de la catégorie de la route ('catr'), suivi de près par le code INSEE de la commune ('com'), puis par l’usage ou non de certains équipements de sécurité ('secu') et le nombre total de voies de circulation ('nbv') et enfin par le type de collision ('col') pour le top 5.
+		
+		A elles cinq, ces variables expliquent 55,5% de la prédiction de notre modèle.
+
+		### Conclusions et pistes d’améliorations sur DecisionTree
+
+		La modélisation avec DecisionTree se révèle acceptable avec son taux de bonnes prédictions de 70,52%, mais présente de nombreuses limites en termes de robustesse. La plus importante d’entre-elles est le biais de prédiction vers les accidents corporels les moins graves.
+		
+		Les pistes d’améliorations avec ce modèle de Machine Learning seraient :
+		* dans le jeu de données, de supprimer les modalités non prédites, soit la modalité la moins grave : '1',
+		* réaliser une stratification en fonction des modalités présentes au moment de créer les jeux de données d’entraînement et de test,
+		* réaliser un graphique visuel de l'arbre de décision. Vu le très grand nombre de données, les images créées ont été inutilisables avec nos connaissances actuelles.
+		
+		Les autres pistes d’améliorations seraient :
+		* choisir un modèle de Machine Learning plus adapté au type qualitatif de notre jeu de données et à son nombre élevé d’observations (largement supérieur au seuil des 100k observations), comme SGDClassifier par exemple,
+		* tester un modèle de l'arbre de décision dans une bibliothèque plus adaptée au Big Data telle que PySpark.
+
+		# Conclusions partielles
+
+		Aussi bien le modèle de _Machine Learning_ que les _corrélations de Pearson_ présentent un top 10 des variables explicatives. Nous nous proposons de les comparer :
+		
+		__Top 5 du Machine Learning via DecisionTree__ :
+		
+		* catégorie de la route ('catr'),
+		* code INSEE de la commune ('com'),
+		* usage ou non de certains équipements de sécurité ('secu'),
+		* nombre total de voies de circulation ('nbv'),
+		* type de collision ('col').
+		
+		__Top 10 des corrélations de Pearson__ :
+		
+		* catégorie de l'usager ('catu'),
+		* information permettant de savoir si le piéton accidenté était seul ou non ('etatp'),
+		* action du piéton ('actp'),
+		* localisation du piéton ('locp'),
+		* existence et utilisation d'équipement de sécurité ('secu')
+		* catégorie du véhicule ('catv'),
+		* année de naissance de l'accidenté ('an_nais'),
+		* obstacle fixe heurté ('obs')
+		* sexe de l'accidenté ('sexe').
+		
+		On remarque que les deux classifications ne donnent quasiment aucune variable explicative commune, hors l'existence et l'utilisation d'équipement de sécurité ('secu'). Mais on voit qu'elle se situe au niveau 3 et 5, respectivement pour le modèle de Machine Learning et les corrélations de Pearson.
+		
+		Ainsi, on voit que les deux techniques ne sont absolument pas remplacables, mais fonctionnent de concert, chacune avec leurs limites et au bon moment du process.
+		Le taux de réussite de prédiction du modèle sur le jeu de test, c’est-à-dire en conditions réelles d’utilisation, s'élève à 70,52%.
+
+		"""
+	if st.checkbox('Implémentation du modèle'):
+		# Chargement du modèle entraîné via pickle
+		pickle_fichier = open('clf_dt3-pickle.pkl', 'rb') 
+		classifier_pickle = pickle.load(pickle_fichier)
+	 
+		# Fonction qui réalisera la prédiction en utilisant les données entrées par l'utilisateur
+		def prediction(catr_select, secu_select, nbv_select, col_select, agg_select, situ_select, obsm_select, larrout_select, obs_select):
+			# Pre-processing des entrées de l'utilisateur    
+			# Catégorie de route
+			catr_switch = {
+					'Autoroute':1,
+					'Route Nationale':2,
+					'Route Départementale':3,
+					'Voie Communale':4,
+					'Hors réseau public':5,
+					'Parc de stationnement public':6,
+					'Autre':9
+					}
+					
+			catr = catr_switch[catr_select]
+			# Présence et utilisation d'équipement de sécurité
+			secu_switch = {
+					'Ceinture utilisée':11,
+					'Ceinture non utilisée':12,
+					'Ceinture, utilisation indéterminable':13,
+					'Casque utilisé':21,
+					'Casque non utilisé':22,
+					'Casque, utilisation indéterminable':23,
+					'Dispositif enfants utilisé':31,
+					'Dispositif enfants non utilisé':32,
+					'Dispositif enfants, utilisation indéterminable':33,
+					'Equipement réfléchissant utilisé':41,
+					'Equipement réfléchissant non utilisé':42,
+					'Equipement réfléchissant, utilisation indéterminable':43,
+					'Autre équipement utilisé':91,
+					'Autre équipement non utilisé':92,
+					'Autre équipement, utilisation indéterminable':93
+					}
+			secu = secu_switch[secu_select]
 			
-	main()
+			# Type de collision
+			col_switch = {
+					'Deux véhicules, collision frontale':1,
+					'Deux véhicules, collision par l\'arrière':2,
+					'Deux véhicules, collision par le coté':3,
+					'Trois véhicules et plus, collision en chaîne':4,
+					'Trois véhicules et plus, collisions multiples':5,
+					'Autres types de collision':6,
+					'Aucune collision':7
+					}
+			col = col_switch[col_select]
+			
+			# En/hors agglomération
+			agg_switch = {
+					'Hors agglomération':1,
+					'En agglomération':2
+					}
+			agg = agg_switch[agg_select]
+			
+			# Situation de l'accident
+			situ_switch = {
+					'Autoroute':1,
+					'Route Nationale':2,
+					'Route Départementale':3,
+					'Voie Communale':4,
+					'Hors réseau public':5,
+					'Parc de stationnement public':6,
+					'Autre':9
+					}
+			situ = situ_switch[situ_select]
+			
+			# Obstacle mobile heurté
+			obsm_switch = {
+					'Piéton':1,
+					'Véhicule':2,
+					'Véhicule sur rail':4,
+					'Animal domestique':5,
+					'Animal sauvage':6,
+					'Autre':9
+					}
+			obsm = obsm_switch[obsm_select]
+			
+			# Obstacle fixe heurté
+			obs_switch = {
+					'Véhicule en stationnement':1,
+					'Arbre':2,
+					'Glissière métallique':3,
+					'Glissière béton':4,
+					'Autre type de glissière':5,
+					'Bâtiment, mur, pile de pont':6,
+					'Support de signalisation verticale ou poste d\'appel d\'urgence':7,
+					'Poteau':8,
+					'Mobilier urbain':9,
+					'Parapet':10,
+					'Ilot, refuge, borne haute':11,
+					'Bordure de trottoir':12,
+					'Fossé, talus, paroi rocheuse':13,
+					'Autre obstacle fixe sur la chaussée':14,
+					'Autre obstacle fixe sur le trottoir ou l\'accotement':15,
+					'Sortie de chaussée sans obstacle':16
+					}
+			obs = obs_switch[obs_select]
+			
+			# Largeur de route
+			larrout = larrout_select
+			
+			# Nombre de voies
+			nbv = nbv_select
+	 
+			# Réalisation de la prediction personnalisée 
+			prediction = classifier_pickle.predict( 
+				[[catr, secu, nbv, col, agg, situ, obsm, larrout, obs]]
+				)
+
+			# ~ nos prédictions renvoient les modalités : 2,3,4 
+			return prediction  
+
+		# Fonction de création de la page web Streamlit
+		def main_model():
+			 
+			catr_select = st.selectbox('Catégorie de route', [	'Autoroute',
+			'Route Nationale',
+			'Route Départementale',
+			'Voie Communale',
+			'Hors réseau public',
+			'Parc de stationnement public',
+			'Autre'])
+			
+			secu_select = st.selectbox("Présence et utilisation d'équipement de sécurité", ['Ceinture utilisée',
+					'Ceinture non utilisée',
+					'Ceinture, utilisation indéterminable',
+					'Casque utilisé',
+					'Casque non utilisé',
+					'Casque, utilisation indéterminable',
+					'Dispositif enfants utilisé',
+					'Dispositif enfants non utilisé',
+					'Dispositif enfants, utilisation indéterminable',
+					'Equipement réfléchissant utilisé',
+					'Equipement réfléchissant non utilisé',
+					'Equipement réfléchissant, utilisation indéterminable',
+					'Autre équipement utilisé',
+					'Autre équipement non utilisé',
+					'Autre équipement, utilisation indéterminable'])
+
+			col_select = st.selectbox('Type de collision',['Deux véhicules, collision frontale',
+			'Deux véhicules, collision par l\'arrière',
+			'Deux véhicules, collision par le coté',
+			'Trois véhicules et plus, collision en chaîne',
+			'Trois véhicules et plus, collisions multiples',
+			'Autres types de collision',
+			'Aucune collision'
+			])
+
+			agg_select = st.selectbox('En/hors agglomération',['Hors agglomération',
+			'En agglomération'
+			])
+
+			situ_select = st.selectbox("Situation de l'accident",['Autoroute',
+			'Route Nationale',
+			'Route Départementale',
+			'Voie Communale',
+			'Hors réseau public',
+			'Parc de stationnement public',
+			'Autre'])
+
+			obsm_select = st.selectbox("Obstacle mobile heurté",['Piéton',
+			'Véhicule',
+			'Véhicule sur rail',
+			'Animal domestique',
+			'Animal sauvage',
+			'Autre'])
+			
+			obs_select = st.selectbox("Obstacle fixe heurté",['Véhicule en stationnement',
+			'Arbre',
+			'Glissière métallique',
+			'Glissière béton',
+			'Autre type de glissière',
+			'Bâtiment, mur, pile de pont',
+			'Support de signalisation verticale ou poste d\'appel d\'urgence',
+			'Poteau',
+			'Mobilier urbain',
+			'Parapet',
+			'Ilot, refuge, borne haute',
+			'Bordure de trottoir',
+			'Fossé, talus, paroi rocheuse',
+			'Autre obstacle fixe sur la chaussée',
+			'Autre obstacle fixe sur le trottoir ou l\'accotement',
+			'Sortie de chaussée sans obstacle'])
+			
+			larrout_select = st.selectbox("Largeur de la route (en m)",np.arange(1,20,1))
+			
+			nbv_select = st.selectbox("Nombre de voies",np.arange(1,10,1))
+			
+			if st.button("Prédire"): 
+				result = prediction(catr_select, secu_select, nbv_select, col_select, agg_select, situ_select, obsm_select, larrout_select, obs_select)
+				if result == 2:
+					st.success('Tué')
+				elif result == 3:
+					st.success('Blessé hospitalisé')
+				elif result == 4:
+					st.success('Blessé léger') 
+			    
+
+		"""
+		### Prédiction
+		---
+		#### Veuillez sélectionner les modalités des variables explicatives ci-dessous :
+			""" 
+			
+		main_model()
 
 elif nav == '5. Conclusion':
 	"""
