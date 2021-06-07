@@ -1087,13 +1087,11 @@ elif nav == '4. Modélisation':
 			'En agglomération'
 			])
 
-			situ_select = st.selectbox("Situation de l'accident",['Autoroute',
-			'Route Nationale',
-			'Route Départementale',
-			'Voie Communale',
-			'Hors réseau public',
-			'Parc de stationnement public',
-			'Autre'])
+			situ_select = st.selectbox("Situation de l'accident",['Sur chaussée',
+						"Sur bande d'arrêt d'urgence",
+						'Sur accotement',
+						'Sur trottoir',
+						'Sur piste cyclable'])
 
 			obsm_select = st.selectbox("Obstacle mobile heurté",['Piéton',
 			'Véhicule',
