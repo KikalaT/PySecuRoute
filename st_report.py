@@ -993,13 +993,11 @@ elif nav == '4. Modélisation':
 			
 			# Situation de l'accident
 			situ_switch = {
-					'Autoroute':1,
-					'Route Nationale':2,
-					'Route Départementale':3,
-					'Voie Communale':4,
-					'Hors réseau public':5,
-					'Parc de stationnement public':6,
-					'Autre':9
+						'Sur chaussée':1,
+						"Sur bande d'arrêt d'urgence":2,
+						'Sur accotement':3,
+						'Sur trottoir':4,
+						'Sur piste cyclable':5
 					}
 			situ = situ_switch[situ_select]
 			
