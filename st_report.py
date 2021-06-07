@@ -1119,7 +1119,7 @@ elif nav == '4. Modélisation':
 			
 			larrout_select = st.selectbox("Largeur de la route (en m)",np.arange(1,1000,1))
 			
-			nbv_select = st.selectbox("Nombre de voies",np.arange(1,20,1))
+			nbv_select = st.selectbox("Nombre de voies",np.arange(1,10,1))
 			
 			if st.button("Prédire"): 
 				result = prediction(catr_select, secu_select, nbv_select, col_select, agg_select, situ_select, obsm_select, larrout_select, obs_select)
