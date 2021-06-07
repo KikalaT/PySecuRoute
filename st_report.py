@@ -884,7 +884,7 @@ elif nav == '4. Modélisation':
 			st.success('Votre crédit est {}'.format(result))
 			print(LoanAmount)
 			
-		main()
+	main()
 
 elif nav == '5. Conclusion':
 	"""
