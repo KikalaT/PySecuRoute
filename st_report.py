@@ -825,7 +825,7 @@ elif nav == '4. Modélisation':
 
 
 		### Données
-		Les données utilisées sont celles fournies par le Ministère de l’Intérieur, moins 19 variables que nous avons jugées inutiles ou redondantes. Nous avons enlevé toutes les variables de localisation géographiques, ainsi que les informations temporelles et les numéros d’accident et de véhicule. En voici la liste exhaustive : `dep`, `v2`, `v1`, `gps`, `pr1`, `pr`, `adr`, `voie`, `long`, `lat`, `Num_Acc`, `num_veh`, `an`, `mois`, `jour`, `hrmn`, `departement`, `region`, `an_nais`.
+		Les données utilisées sont celles fournies par le Ministère de l’Intérieur, moins 19 variables que nous avons jugées inutiles ou redondantes. Nous avons enlevé toutes les variables de localisation géographiques (hormis le code INSEE de la commune), ainsi que les informations temporelles et les numéros d’accident et de véhicule. En voici la liste exhaustive : `dep`, `v2`, `v1`, `gps`, `pr1`, `pr`, `adr`, `voie`, `long`, `lat`, `Num_Acc`, `num_veh`, `an`, `mois`, `jour`, `hrmn`, `departement`, `region`, `an_nais`.
 
 		L’étendue des données porte toujours sur __les années 2005 à 2017 incluses__.
 
@@ -841,14 +841,14 @@ elif nav == '4. Modélisation':
 		* réduire le temps de calcul,
 		* correspondre le mieux à une logique d’assureur, qui pourrait être notre client ici.
 
-		Par contre, il y aura une conséquence : __la gravité la moins élevée (modalité '1' = 'indemne`) n’est que très peu observée__. De fait, elle sera absente du jeu de test et donc des résultats de la modélisation.
+		Par contre, il y aura une conséquence : __la gravité la moins élevée (modalité '1' = 'indemne') n’est que très peu observée__. De fait, elle sera absente du jeu de test et donc des résultats de la modélisation.
 
 
 		### Données utilisées
 		Le jeu de données utilisé pour les prédictions de Machine Learning comprend donc _1 100 476 observations_ et _33 variables explicatives potentielles_.
 
 		### Choix des modèles
-		Dans un but d’interprétabilité des résultats et de test de robustesse, nous avons opté dans un premier temps pour l’__arbre de décision__ (DecisionTree).
+		Dans un but d’interprétabilité des résultats et de test de robustesse, nous avons opté pour l’__arbre de décision__ (DecisionTree).
 
 
 		### Résultats avec DecisionTree
@@ -871,8 +871,8 @@ elif nav == '4. Modélisation':
 		La moyenne montre des scores satisfaisants, avec un recall légèrement supérieur au score f1 et à la précision, respectivement 71 et 68%.
 
 
-		Matrice de confusion (heatmap et tableau)
-		Dans le détail, la matrice de confusion représentée visuellement ci-dessous par un heatmap montre son meilleur taux de prédiction des accidents corporels sur les cas les moins graves (modalité '4' = 'blessé léger`), alors que les autres prédictions présentent un nombre élevé de mauvaises prévisions par le modèle.
+		#### Matrice de confusion (heatmap et tableau)
+		Dans le détail, la matrice de confusion représentée visuellement ci-dessous par un heatmap montre son meilleur taux de prédiction des accidents corporels sur les cas les moins graves (modalité '4' = 'blessé léger'), alors que les autres prédictions présentent un nombre élevé de mauvaises prévisions par le modèle.
 		"""
 		st.image('PySecuRoute-DecisionTree-02-Matrice-confusion-heatmap.png')
 		"""
