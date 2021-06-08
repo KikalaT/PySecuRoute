@@ -820,128 +820,96 @@ elif nav == '4. Modélisation':
 	
 	if st.checkbox('Présentation du modèle'):
 		"""
-		## Introduction
-		
-		Lors de l'étape de recherche des corrélations, nous avons observé que les colonnes de numérotation des accidents (`Num_Acc`) et des véhicules (`num_veh`) étaient contre-productives ; tout comme les 4 colonnes formant les données temporelles des accidents (`an`, `mois`, `jour` et `hrmn`).
-		Également pour les besoins de modélisaiton, nous avons supprimé les 2 colonnes de localisation (`'departement'` et `'region'`), créant ainsi un DataFrame intitulé `df_corr`.
-		
-		Ce dataframe conserve donc : 
-		* 2012004 lignes,
-		* 48 colonnes.
-		
-		Ayant constitué une matrice de corrélation, celle-ci nous a montré de fortes corrélations positives sont visibles, en particulier entre le trio localisation du piéton (`locp`), action du piéton (`actp`) et l'information de savoir si le piéton accidenté était seul ou non (`etatp`), ainsi qu'entre ces 3 variables et la catégorie d'usager (`catu`), mais également entre la catégorie de route (`catr`) et la localisation en ou hors agglomération (`agg`).
-		A l'opposé, seule ressort particulièrement la relation négative entre le type de collision (`col`) et l'obstacle mobile heurté (`obsm`).
-		
-		En somme : des relations devenues évidentes et bien connues sur lesquelles les autorités routières communiquent beaucoup depuis de nombreuses années.
-		
-		### Top des variables explicatives :
-		
-		Afin de mieux comprendre chaque variable explicative potentielle, il faut se pencher sur ses corrélations les plus fortes. Vu le nombre nettement plus élevé de corrélations positives par rapport à celles négatives, nous avons occultés ces dernières dans le rapport.
-		Représenté sous forme de tableaux, le top 5 des corrélations de chacunes de nos 35 variables potentielles est trop peu interprétable :
+		### Présentation du modèle
+		En complément des analyses réalisées grâce aux dataviz’, nous avons voulu réaliser du Machine Learning afin de voir si on pouvait prédire la gravité d’un accident corporel en France.
 
-		On observe les relations entre le quatuor (`locp`, `actp`, `etatp` et `catu`) de tout à l'heure, mais on voit nettement mieux d'autres relations comme celle entre :
-		
-		* la situation de l'accident (`situ`) et l'obstacle fixe heurté (`obs`),
-		* ou entre l'état de surface de la route (`surf`) et les conditions atmosphériques (`atm`),
-		* ou entre l'obstacle fixe heurté (`obs`) avec le type de collision (`col`) et la situation de l'accident (`situ`),
-		* ou entre la place occupée dans le véhicule par l'usager au moment de l'accident (`place`) et la catégorie de l'usager (`catu`),
-		* ou enfin entre le sexe de l'usager (`sexe`) et la catégorie de l'usager (`catu`).
-		
-		En conclusion des relations qui sont pour la plupart évidentes et ne donnent que très peu d'informations nouvelles concernant la causalité.
-			
-		Notre but étant de travailler sur la __gravité des accidents corporels__, nous allons nous pencher plus à même sur les variables explicatives qui ressortent grâce aux coefficients de Pearson, en particulier, les corrélations positives :
-		Les plus forts coefficients de corrélation sont obtenus par le quatuor de tête que nous observons régulièrement. Ici, c'est la catégorie de l'usager (`catu`) qui domine, suivi de l'information permettant de savoir si le piéton accidenté était seul ou non (`etatp`), suivi de très près par l'action du piéton (`actp`) et enfin, la localisation du piéton (`locp`).
-		
-		Ensuite, l'existence et l'utilisation d'équipement de sécurité (`secu`) font leur entrée, suivi par la catégorie du véhicule (`catv`), puis l'année de naissance de l'accidenté (`an_nais`), conforté par l'obstacle fixe heurté (`obs`) et enfin le sexe de l'accidenté (`sexe`).
-		
-		Pour résumer, la gravité d'un accident corporel semble se porter par qui est l'accidenté et ce qu'il faisait, suivi de l'usage ou non d'équipements de sécurité, le type de véhicule rencontré, l'âge de l'accidenté, le type d'obstacle fixe heurté le cas échéant, ainsi que son sexe.
 
-		## Machine Learning
+		### Données
+		Les données utilisées sont celles fournies par le Ministère de l’Intérieur, moins 19 variables que nous avons jugées inutiles ou redondantes. Nous avons enlevé toutes les variables de localisation géographiques, ainsi que les informations temporelles et les numéros d’accident et de véhicule. En voici la liste exhaustive : `dep`, `v2`, `v1`, `gps`, `pr1`, `pr`, `adr`, `voie`, `long`, `lat`, `Num_Acc`, `num_veh`, `an`, `mois`, `jour`, `hrmn`, `departement`, `region`, `an_nais`.
 
-		En complément des analyses réalisées notamment grâce aux dataviz’, nous avons voulu réaliser du Machine Learning afin de voir si on pouvait prédire la gravité d’un accident corporel en France.
+		L’étendue des données porte toujours sur __les années 2005 à 2017 incluses__.
 
-		## Création du jeu de données
-		Les données utilisées sont celles fournies par le Ministère de l’Intérieur, moins _19 variables_ que nous avons jugées inutiles ou redondantes. Nous avons enlevé toutes les variables de __localisation géographiques__, ainsi que les __tinformations temporelles__ et les __numéros d’accident et de véhicule__. En voici la liste exhaustive : `dep`, `v2`, `v1`, `gps`, `pr1`, `pr`, `adr`, `voie`, `long`, `lat`, `Num_Acc`, `num_veh`, `an`, `mois`, `jour`, `hrmn`, `departement`, `region`, `an_nais`.
-		
-		L’étendue des données porte toujours sur les années 2005 à 2017 inclues.
-		
-		La gestion des NaN pour les variables quantitatives, suit le choix de l’ensemble du projet, soit l’utilisation du mode. Concernant les variables quantitatives, les observations sont supprimées.
+		La gestion des _NaN_, pour les variables quantitatives, suit le choix de l’ensemble du projet, soit l’utilisation du mode. Concernant les variables quantitatives, les observations sont supprimées.
 
-		## Réduction du jeu de données
-		Après plusieurs essais, le choix a été fait de ne pas réaliser les modélisations sur tout le dataset de Machine Learning, mais après une diminution de ce dataset par regroupement sur le numéro d'accident (`Num_Acc`), en ne conservant que la gravité (`grav`) la plus élevée lors de chaque accident. Ce choix nous a semblé judicieux pour plusieurs raisons :
-		
+
+		### Tests et améliorations du ML
+		Après plusieurs essais, le choix a été fait de ne pas réaliser les modélisations sur tout le dataset de ML, mais après une diminution de ce dataset par regroupement sur le numéro d'accident (`Num_Acc`), en ne conservant que la gravité (`grav`) la plus élevée lors de chaque accident.
+
+		Ce choix nous a semblé judicieux pour plusieurs raisons :
+
 		* donner de meilleures prédictions,
 		* réduire le temps de calcul,
 		* correspondre le mieux à une logique d’assureur, qui pourrait être notre client ici.
-		
-		Par contre, il aura une conséquence : la gravité la moins élevée (modalité '1`) n’est que très peu observée. De fait, elle sera absente du jeu de test et donc des résultats.
-		Nos itérations de Machine Learning se feront donc sur __1100476 lignes x 34 colonnes__ (variable cible incluse) quand nous utiliserons l'ensemble des données.
-		
-		Comme il est important de ne pas fournir de NaN à un modèle de Machine Learning, nous les avons supprimer.
-		
-		## GridSearchCV
-		
-		Les différents essais réalisés par `GridSearchCV` sur une partie de nos données nous ont amené, dans un but de robustesse et d’interprétabilité des résultats, vers le choix de la modélisation par l’__arbre de décision__ (DecisionTree).
-		
-		Les longs temps de calcul nous ont amené à échantillonner sur 20% pour ces GridSearchCV.
-		
-		L'échantillonnage au hasard réalisé sur notre jeu de données a été porté sur __20%__. Cela correspond à _220095 lignes x 34 colonnes_ (variable cible incluse). 
-		Ainsi, notre jeu d'entraînement échantillonné porte sur 176076 lignes (sur _33 colonnes_ maintenant, comme la variable cible a été exclue) et le jeu de test associé, sur 44019 lignes.
-		
-		Conclusion : plusieurs itérations de GridSearchCV ont été réalisées et la recherche du meilleur paramètre sur 20% du jeu de données nous oriente vers le critère `gini`, c'est le paramètre que nous utiliserons sur la totalité de notre dataset pour les prédictions via Machine Learning qui vont suivre.
-		
-		## Decision Tree
-		
-		Ici, le jeu d'entraînement porte sur 880380 lignes (sur 33 colonnes maintenant, comme la variable cible a été exclue) et le jeu de test associé, sur 220096 lignes.
-		Le taux de réussite de prédiction du modèle sur le jeu d'entraînement s'élève à 73,03%.
-		Il se caractérise par la prévalence de la catégorie de la route (`catr`), suivi de près par le code INSEE de la commune (`com`), puis par l’usage ou non de certains équipements de sécurité (`secu`) et le nombre total de voies de circulation (`nbv`) et enfin par le type de collision (`col`) pour le top 5.
-		
-		A elles cinq, ces variables expliquent 55,5% de la prédiction de notre modèle.
 
-		## Conclusions et pistes d’améliorations sur DecisionTree
+		Par contre, il y aura une conséquence : __la gravité la moins élevée (modalité '1' = 'indemne`) n’est que très peu observée__. De fait, elle sera absente du jeu de test et donc des résultats de la modélisation.
 
-		La modélisation avec DecisionTree se révèle acceptable avec son taux de bonnes prédictions de 70,52%, mais présente de nombreuses limites en termes de robustesse. La plus importante d’entre-elles est le biais de prédiction vers les accidents corporels les moins graves.
-		
-		Les pistes d’améliorations avec ce modèle de Machine Learning seraient :
-		* dans le jeu de données, de supprimer les modalités non prédites, soit la modalité la moins grave : '1',
-		* réaliser une stratification en fonction des modalités présentes au moment de créer les jeux de données d’entraînement et de test,
-		* réaliser un graphique visuel de l'arbre de décision. Vu le très grand nombre de données, les images créées ont été inutilisables avec nos connaissances actuelles.
-		
-		Les autres pistes d’améliorations seraient :
-		* choisir un modèle de Machine Learning plus adapté au type qualitatif de notre jeu de données et à son nombre élevé d’observations (largement supérieur au seuil des 100k observations), comme SGDClassifier par exemple,
-		* tester un modèle de l'arbre de décision dans une bibliothèque plus adaptée au Big Data telle que PySpark.
 
-		## Conclusions partielles
+		### Données utilisées
+		Le jeu de données utilisé pour les prédictions de Machine Learning comprend donc _1 100 476 observations_ et _33 variables explicatives potentielles_.
 
-		Aussi bien le modèle de _Machine Learning_ que les _corrélations de Pearson_ présentent un top 10 des variables explicatives. Nous nous proposons de les comparer :
-		
-		### Top 5 du Machine Learning via DecisionTree :
-		
-		* catégorie de la route (`catr`),
-		* code INSEE de la commune (`com`),
-		* usage ou non de certains équipements de sécurité (`secu`),
-		* nombre total de voies de circulation (`nbv`),
-		* type de collision (`col`).
-		
-		### Top 10 des corrélations de Pearson :
-		
-		* catégorie de l'usager (`catu`),
-		* information permettant de savoir si le piéton accidenté était seul ou non (`etatp`),
-		* action du piéton (`actp`),
-		* localisation du piéton (`locp`),
-		* existence et utilisation d'équipement de sécurité (`secu`)
-		* catégorie du véhicule (`catv`),
-		* année de naissance de l'accidenté (`an_nais`),
-		* obstacle fixe heurté (`obs`)
-		* sexe de l'accidenté (`sexe`).
-		
-		On remarque que les deux classifications ne donnent quasiment aucune variable explicative commune, hors l'existence et l'utilisation d'équipement de sécurité (`secu`). Mais on voit qu'elle se situe au niveau 3 et 5, respectivement pour le modèle de Machine Learning et les corrélations de Pearson.
-		
-		Ainsi, on voit que les deux techniques ne sont absolument pas remplacables, mais fonctionnent de concert, chacune avec leurs limites et au bon moment du process.
+		### Choix des modèles
+		Dans un but d’interprétabilité des résultats et de test de robustesse, nous avons opté dans un premier temps pour l’__arbre de décision__ (DecisionTree).
+
+
+		### Résultats avec DecisionTree
+
+		#### Hyperparamètres utilisés
+		Après différents tests de recherche des meilleurs hyperparamètres via la fonction GridSearchCV, il s’est avéré que les meilleurs étaient : `{'criterion': 'gini', 'max_depth': 14}`.
+
+
+		#### Taux de prédiction
+		Le taux de réussite de prédiction du modèle sur le jeu d'entraînement s'élève à __73,03%__.
+
 		Le taux de réussite de prédiction du modèle sur le jeu de test, c’est-à-dire en conditions réelles d’utilisation, s'élève à __70,52%__.
 
+
+		#### Rapport d’évaluation
+		Le rapport d’évaluation du modèle sur l’échantillon de test est le suivant :
 		"""
+		st.image('PySecuRoute-DecisionTree-01-Rapport-evaluation.png')
+		"""
+		La moyenne montre des scores satisfaisants, avec un recall légèrement supérieur au score f1 et à la précision, respectivement 71 et 68%.
+
+
+		Matrice de confusion (heatmap et tableau)
+		Dans le détail, la matrice de confusion représentée visuellement ci-dessous par un heatmap montre son meilleur taux de prédiction des accidents corporels sur les cas les moins graves (modalité '4' = 'blessé léger`), alors que les autres prédictions présentent un nombre élevé de mauvaises prévisions par le modèle.
+		"""
+		st.image('PySecuRoute-DecisionTree-02-Matrice-confusion-heatmap.png')
+		"""
+		En chiffres, cela donne le tableau ci-dessous. Les effectifs visualisés de cette façon sont plus parlants. En outre, il nous permet de calculer que pour la modalité '3' (='blessé hospitalisé`) par exemple, le pourcentage de mauvaises prédictions s’élève à 58,7% et à 0,6%, soit un taux de prévisions correctes 40,7%.
+		"""
+		st.image('PySecuRoute-DecisionTree-03-Matrice-confusion-tableau.png')
+		"""
+		#### Top 10 des variables explicatives
+		Un autre résultat est le top 10 des variables explicatives déterminé par notre modèle de DecisionTree :
+		"""
+		st.image('PySecuRoute-DecisionTree-04-Top10-Importance-variables-explicatives-tableau.png')
+		"""
+		Il se caractérise par la prévalence de la catégorie de la route (`catr`), suivi de près par le code INSEE de la commune (`com`), puis par l’usage ou non de certains équipements de sécurité (`secu`) et le nombre total de voies de circulation (`nbv`) et enfin par le type de collision (`col`) pour le top 5.
+
+		A elles cinq, ces variables expliquent 55,5% de la prédiction de notre modèle.
+
+
+		#### Conclusions et pistes d’améliorations avec DecisionTree
+		La modélisation avec DecisionTree se révèle acceptable avec son taux de bonnes prédictions de __70,52%__, mais présente de nombreuses limites en termes de robustesse. La plus importante d’entre-elles est le biais de prédiction vers les accidents corporels les moins graves (indemnes exclus).
+
+		Les pistes d’améliorations avec ce modèle de Machine Learning seraient :
+		* dans le jeu de données, de supprimer les modalités non prédites, soit la modalité la moins grave : '1' (= les indemnes),
+		* d’opérer une stratification en fonction des modalités présentes au moment de créer les jeux de données d’entraînement et de test,
+		* de réaliser un graphique visuel de l'arbre de décision. Vu le très grand nombre de nœuds, les images créées ont été inexploitables. Il faudrait peut-être chercher un package interactif pour un tel arbre de décision.
+
+		Les autres pistes d’améliorations seraient :
+		* choisir un modèle de Machine Learning plus adapté au type qualitatif de notre jeu de données et à son nombre élevé d’observations (largement supérieur au seuil des 100k observations), comme __SGDClassifier__ par exemple.
+		* tester une modélisation Machine Learning dans une bibliothèque plus adaptée au Big Data, telle que __PySpark__.
+		"""
+
 	if st.checkbox('Implémentation du modèle'):
+		"""
+		#### Préambule
+		Au-delà de réaliser une modélisation de Machine Learning capable de prédire correctement les accidents corporels en France, nous vous proposons de vous essayer à la simulation.
+		Vous trouverez ci-dessous un formulaire qui vous permet de choisir les paramètres d’un accident fictif pour lequel la modélisation va vous prédire, dans la limite de ses capacités, la gravité de l’usager. Vous pouvez choisir différents paramètres sur l’accident, comme son lieu, son type, ainsi que la présence et l’utilisation ou non de certains équipements de sécurité.
+		Nous avons supprimé la variable du code INSEE de la commune ('com') à cause des complexités que son implémentation requérait pour qu’un utilisateur la sélectionne de façon ergonomique et intuitive. Cela a pour conséquence de baisser légèrement le taux de réussite de prédiction du modèle, passant de 70,5 à 70,1%. 
+		"""
 		# Chargement du modèle entraîné via pickle
 		pickle_fichier = open('clf_dt3-pickle.pkl', 'rb') 
 		classifier_pickle = pickle.load(pickle_fichier)
