@@ -907,7 +907,9 @@ elif nav == '4. Modélisation':
 		"""
 		#### Préambule
 		Au-delà de réaliser une modélisation de Machine Learning capable de prédire correctement les accidents corporels en France, nous vous proposons de vous essayer à la simulation.
+		
 		Vous trouverez ci-dessous un formulaire qui vous permet de choisir les paramètres d’un accident fictif pour lequel la modélisation va vous prédire, dans la limite de ses capacités, la gravité de l’usager. Vous pouvez choisir différents paramètres sur l’accident, comme son lieu, son type, ainsi que la présence et l’utilisation ou non de certains équipements de sécurité.
+		
 		Nous avons supprimé la variable du code INSEE de la commune ('com') à cause des complexités que son implémentation requérait pour qu’un utilisateur la sélectionne de façon ergonomique et intuitive. Cela a pour conséquence de baisser légèrement le taux de réussite de prédiction du modèle, passant de 70,5 à 70,1%. 
 		"""
 		# Chargement du modèle entraîné via pickle
