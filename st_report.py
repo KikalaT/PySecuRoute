@@ -1120,5 +1120,21 @@ elif nav == '4. Modélisation':
 
 elif nav == '5. Conclusion':
 	"""
-	TODO
+	La __Dataviz'__ a confirmé en majorité les __prédictions de gravité__ issues du __Machine Learning__ et de la table de __corrélation de Pearson__.
+	
+	Les variables catégorielles significatives sont :
+	* Sexe
+	* Âge
+	* Catégorie de véhicule
+	* Catégorie d'usager
+	* Catégorie de route
+	* Type de collision
+	* Mois
+	* Jour
+	* Heure
+
+	Les données étudiées sont essentiellement des données de __constat__, et non pas d'enquête.
+	Elles complètent parfaitement les variables généralement mises en évidence par les _campagnes de prévention routière_ (vitesse, alcoolémie et téléphone).
+
+	Il serait intéressant de pouvoir réaliser ces mêmes analyses sur les périodes de confinement, afin d'analyser l'impact du Covid sur la circulation routière.
 	"""
