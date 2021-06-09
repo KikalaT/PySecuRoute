@@ -81,7 +81,7 @@ if nav == '1. Présentation':
 
 	__Kikala__: Enseignant, Chercheur, formé au renseignement d'intéret économique, adepte du Zen de Python depuis quelques années, s'est orienté naturellement sur l'exploitation, la mise en forme des données, le data processing.
 
-	Son expérience en Python nous a permis de débuter rapidement le projet et de transmettre ses actuces.
+	Son expérience en Python nous a permis de débuter rapidement le projet et de transmettre ses astuces.
 
 	__Christophe__: Chercheur en Archéologie et Géographie, a pu retrouver facilement ses repères en fouillant la documentation et les hyperparamètres d'un nombre important de modèles de Machine Learning.
 
@@ -89,7 +89,7 @@ if nav == '1. Présentation':
 
 	__Hervé__: Analyste fonctionnel, Consultant en Assistance en Maitrise d'Ouvrage, a pu continuer de questionner, analyser, détecter les écarts en s'orientant vers la production de graphiques, en requétant et contrôlant l'intégrité des données avant le traitement de Machine Learning.
 
-	__Pascal__ : sa formation en Gestion et Commerce, son attrait pour les tableaux et les statistiques l'ont orienté vers la partie DataVizualiation avec de nombreux graphiques à étudier en liaison avec les résultats du Machine Learning.
+	__Pascal__ : sa formation en Gestion et Commerce, son attrait pour les tableaux et les statistiques l'ont orienté vers la partie Data Visualisation avec de nombreux graphiques à étudier en liaison avec les résultats du Machine Learning.
 
 	Les parties rédaction, relecture et critique ont été équitablement partagée dans l'équipe.
 
@@ -1120,6 +1120,8 @@ elif nav == '4. Modélisation':
 
 elif nav == '5. Conclusion':
 	"""
+	### Conclusions
+	---
 	La __Dataviz'__ a confirmé en majorité les __prédictions de gravité__ issues du __Machine Learning__ et de la table de __corrélation de Pearson__.
 	
 	Les variables catégorielles significatives sont :
@@ -1136,5 +1138,11 @@ elif nav == '5. Conclusion':
 	Les données étudiées sont essentiellement des données de __constat__, et non pas d'enquête.
 	Elles complètent parfaitement les variables généralement mises en évidence par les _campagnes de prévention routière_ (vitesse, alcoolémie et téléphone).
 
-	Il serait intéressant de pouvoir réaliser ces mêmes analyses sur les périodes de confinement, afin d'analyser l'impact du Covid sur la circulation routière.
+	Il serait intéressant de pouvoir réaliser ces mêmes analyses sur les périodes de confinement, afin d'__analyser l'impact du Covid sur la circulation routière__.
+	
+	### Pour aller plus loin...
+	---
+	Vous pouvez télécharger l'application native __PySecuRoute__ selon votre système d'exploitation :
+	
+	[win32](https://christophe-wardius.fr/projets/pysecuroute/rendu-final/PySecuRoute-win32-x64.zip)  |  [macOSX](https://christophe-wardius.fr/projets/pysecuroute/rendu-final/PySecuRoute-osx-x64.zip)  |  [linux](https://christophe-wardius.fr/projets/pysecuroute/rendu-final/PySecuRoute-linux-x64.zip)
 	"""
