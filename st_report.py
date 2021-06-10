@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import json
+import base64
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
@@ -1146,9 +1147,14 @@ elif nav == '5. Conclusion':
 	
 	[win32](https://christophe-wardius.fr/projets/pysecuroute/rendu-final/PySecuRoute-win32-x64.zip)  |  [macOSX](https://christophe-wardius.fr/projets/pysecuroute/rendu-final/PySecuRoute-osx-x64.zip)  |  [linux](https://christophe-wardius.fr/projets/pysecuroute/rendu-final/PySecuRoute-linux-x64.zip)
 	
-	Vous pouvez également télécharger notre _méthodologie de travail_ au lien suivant :
-	
-	[rapport](https://christophe-wardius/projets/pysecuroute/rendu-final/Rapport-PySecuRoute.pdf)
+	Vous pouvez également consulter notre _méthodologie de travail_ ci-dessous :
 	
 	"""
 	
+	if st.checkbox('Méthodologie'):
+		f = open('rapport_final.pdf','rb')
+		base64_pdf = base64.b64encode(f.read()).decode('utf-8')
+		  
+		pdf_display = F'<embed src="data:application/pdf;base64,{base64_pdf}" width="700" height="1000" type="application/pdf">'
+		
+		st.markdown(pdf_display, unsafe_allow_html=True)
