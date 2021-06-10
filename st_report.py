@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 import json
-import base64
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
@@ -1152,7 +1151,6 @@ elif nav == '5. Conclusion':
 	"""
 	
 	if st.checkbox('Méthodologie'):
-		with open('rapport_final.pdf','rb') as f:
-			base64_pdf = base64.b64encode(f.read()).decode('utf-8')
-			pdf_display = F'<embed src="data:application/pdf;base64,{base64_pdf}" width="700" height="1000" type="application/pdf">'
-			st.markdown(pdf_display, unsafe_allow_html=True)
+		st.markdown("""
+						<embed src="https://www.jazzreal.org/static/rapport_final.pdf" width="800" height="600">
+					""", unsafe_allow_html=True)
