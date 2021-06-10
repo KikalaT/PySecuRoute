@@ -1152,9 +1152,7 @@ elif nav == '5. Conclusion':
 	"""
 	
 	if st.checkbox('Méthodologie'):
-		f = open('rapport_final.pdf','rb')
-		base64_pdf = base64.b64encode(f.read()).decode('utf-8')
-		  
-		pdf_display = F'<embed src="data:application/pdf;base64,{base64_pdf}" width="700" height="1000" type="application/pdf">'
-		
-		st.markdown(pdf_display, unsafe_allow_html=True)
+		with open('rapport_final.pdf','rb') as f:
+			base64_pdf = base64.b64encode(f.read()).decode('utf-8')
+			pdf_display = F'<embed src="data:application/pdf;base64,{base64_pdf}" width="700" height="1000" type="application/pdf">'
+			st.markdown(pdf_display, unsafe_allow_html=True)
