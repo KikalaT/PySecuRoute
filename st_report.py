@@ -1145,4 +1145,10 @@ elif nav == '5. Conclusion':
 	Vous pouvez télécharger l'application native __PySecuRoute__ selon votre système d'exploitation :
 	
 	[win32](https://christophe-wardius.fr/projets/pysecuroute/rendu-final/PySecuRoute-win32-x64.zip)  |  [macOSX](https://christophe-wardius.fr/projets/pysecuroute/rendu-final/PySecuRoute-osx-x64.zip)  |  [linux](https://christophe-wardius.fr/projets/pysecuroute/rendu-final/PySecuRoute-linux-x64.zip)
+	
+	Vous pouvez également télécharger notre _méthodologie de travail_ au lien suivant :
+	
+	[rapport](https://christophe-wardius/projets/pysecuroute/rendu-final/Rapport-PySecuRoute.pdf)
+	
 	"""
+	
